@@ -1,0 +1,3057 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Folder" referent="RBX362833D50A66403AA7098A2577EA7745">
+		<Properties>
+			<BinaryString name="AttributesSerialize"></BinaryString>
+			<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+			<bool name="DefinesCapabilities">false</bool>
+			<string name="Name">HE-Utilities</string>
+			<int64 name="SourceAssetId">-1</int64>
+			<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+		</Properties>
+		<Item class="Script" referent="RBX90C8682F53D642ED80A92344FA234448">
+			<Properties>
+				<ProtectedString name="Source"><![CDATA[--!strict
+-- Entry point. Keeps this file tiny — all real logic lives in Modules/.
+local MainController = require(script.Parent.Modules.MainController)
+
+local controller = MainController.new(plugin, script)
+controller:Init()
+]]></ProtectedString>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<token name="RunContext">0</token>
+				<string name="ScriptGuid">{6D34C1DA-9DDC-436D-B1E5-890FA75757E6}</string>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">Init</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+		</Item>
+		<Item class="Folder" referent="RBXD6F17E807CD949258A78430D857C99B7">
+			<Properties>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">Modules</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBXFE2FF6C065B24BA5B3868A39288B7B52">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- Utils: low-level, stateless helper functions shared by every scanner.
+local Utils = {}
+
+function Utils.splitLines(text)
+	local results = {}
+	for line in string.gmatch(text, "[^\r\n]+") do
+		local trimmed = line:match("^%s*(.-)%s*$")
+		if trimmed and trimmed ~= "" then
+			table.insert(results, trimmed)
+		end
+	end
+	return results
+end
+
+function Utils.escapeLuaString(value)
+	return string.format("%q", value)
+end
+
+function Utils.isLuaScript(obj)
+	return obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("ModuleScript")
+end
+
+function Utils.isAttributeScannable(obj)
+	return obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("ModuleScript")
+		or obj:IsA("Model") or obj:IsA("Part") or obj:IsA("MeshPart")
+		or obj:IsA("UnionOperation") or obj:IsA("SpecialMesh") or obj:IsA("Folder")
+		or obj:IsA("Tool") or obj:IsA("Accessory") or obj:IsA("Humanoid")
+		or obj:IsA("Animation") or obj:IsA("StringValue") or obj:IsA("NumberValue")
+		or obj:IsA("BoolValue") or obj:IsA("ObjectValue")
+end
+
+function Utils.isTextUIObject(obj)
+	return obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox")
+		or obj:IsA("StringValue") or obj:IsA("ProximityPrompt")
+		or obj:IsA("Dialog") or obj:IsA("DialogChoice")
+end
+
+function Utils.getScannableTexts(obj)
+	local texts = {}
+	if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+		table.insert(texts, obj.Text)
+	elseif obj:IsA("TextBox") then
+		table.insert(texts, obj.Text)
+		table.insert(texts, obj.PlaceholderText)
+	elseif obj:IsA("StringValue") then
+		table.insert(texts, obj.Value)
+	elseif obj:IsA("ProximityPrompt") then
+		table.insert(texts, obj.ActionText)
+		table.insert(texts, obj.ObjectText)
+	elseif obj:IsA("Dialog") then
+		table.insert(texts, obj.InitialPrompt)
+	elseif obj:IsA("DialogChoice") then
+		table.insert(texts, obj.UserDialog)
+		table.insert(texts, obj.ResponseDialog)
+	end
+	return texts
+end
+
+function Utils.getLineNumberFromIndex(source, index)
+	local lineNumber = 1
+	for i = 1, math.max(index - 1, 1) do
+		if string.sub(source, i, i) == "\n" then lineNumber += 1 end
+	end
+	return lineNumber
+end
+
+function Utils.buildPreview(source, targetLine, radius)
+	local lines = string.split(source, "\n")
+	local startLine = math.max(targetLine - radius, 1)
+	local endLine = math.min(targetLine + radius, #lines)
+	local previewLines = {}
+	for lineNumber = startLine, endLine do
+		local prefix = lineNumber == targetLine and ">> " or "   "
+		table.insert(previewLines, string.format("%s%d | %s", prefix, lineNumber, lines[lineNumber] or ""))
+	end
+	return table.concat(previewLines, "\n")
+end
+
+function Utils.scanPlainDetailed(source, query, caseSensitive)
+	local matches = {}
+	local startPos = 1
+	local searchSource = caseSensitive and source or string.lower(source)
+	local searchQuery  = caseSensitive and query  or string.lower(query)
+	while true do
+		local s, e = string.find(searchSource, searchQuery, startPos, true)
+		if not s then break end
+		table.insert(matches, { StartIndex = s, EndIndex = e, MatchText = string.sub(source, s, e) })
+		startPos = e + 1
+	end
+	return matches
+end
+
+function Utils.scanPatternDetailed(source, luaPattern)
+	local matches = {}
+	local startPos = 1
+	local MAX_MATCHES = 5000
+	while true do
+		local ok, s, e = pcall(string.find, source, luaPattern, startPos)
+		if not ok then return matches, false end
+		if not s then break end
+		table.insert(matches, { StartIndex = s, EndIndex = e, MatchText = string.sub(source, s, e) })
+		if #matches >= MAX_MATCHES then break end
+		startPos = math.max(e + 1, s + 1)
+	end
+	return matches, true
+end
+
+function Utils.hashString(input)
+	input = tostring(input or "")
+	local h = 5381
+	for i = 1, #input do
+		h = (h * 33 + string.byte(input, i)) % 4294967296
+	end
+	return string.format("%08x", h)
+end
+
+return Utils
+]]></ProtectedString>
+					<string name="ScriptGuid">{09AE4513-C5C0-439B-9CFD-1E4170817785}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">Utils</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX13C62273B68B4D87A19452DC0A82C6FE">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- Theme: all colors, fonts, and shared sizing in one place.
+local Theme = {}
+
+Theme.Color = {
+	BG       = Color3.fromRGB(13,  13,  18),
+	PANEL    = Color3.fromRGB(22,  22,  30),
+	SURFACE  = Color3.fromRGB(30,  30,  42),
+	BORDER   = Color3.fromRGB(50,  50,  68),
+	TEXT     = Color3.fromRGB(225, 225, 235),
+	MUTED    = Color3.fromRGB(120, 120, 150),
+	DIM      = Color3.fromRGB(65,  65,  90),
+	RED      = Color3.fromRGB(210, 55,  55),
+	RED_DIM  = Color3.fromRGB(130, 30,  30),
+	BLUE     = Color3.fromRGB(65,  130, 230),
+	BLUE_DIM = Color3.fromRGB(35,  70,  140),
+	GREEN    = Color3.fromRGB(55,  175, 110),
+	AMBER    = Color3.fromRGB(220, 150, 40),
+	PURPLE   = Color3.fromRGB(140, 80,  210),
+	TEAL     = Color3.fromRGB(45,  170, 160),
+}
+
+Theme.ResultTypeColor = {
+	CodeMatch = Theme.Color.RED,
+	Profanity = Theme.Color.RED,
+	UserId = Theme.Color.RED,
+	UIText = Theme.Color.AMBER,
+	Attributes = Theme.Color.PURPLE,
+	Tag = Theme.Color.TEAL,
+	MissingRef = Theme.Color.AMBER,
+	Recognized = Theme.Color.GREEN,
+	Flagged = Theme.Color.RED,
+}
+
+Theme.SeverityLabel = {
+	CodeMatch = "Code Match",
+	Profanity = "Profanity",
+	UserId = "UserID",
+	UIText = "UI Text",
+	Attributes = "Attribute",
+	Tag = "Tag",
+	MissingRef = "Missing Ref",
+	Recognized = "Recognized",
+	Flagged = "Flagged",
+}
+
+return Theme
+]]></ProtectedString>
+					<string name="ScriptGuid">{EDE4BE50-3EBD-4A0B-842F-50BB13EA03C0}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">Theme</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXA436EBEFBF404ADB98FE0C6C46D11EFC">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- UIKit: small reusable UI-building functions. Pure functions, no state.
+local Theme = require(script.Parent.Theme)
+local Color = Theme.Color
+
+local UIKit = {}
+
+function UIKit.corner(inst, radius)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, radius or 6)
+	c.Parent = inst
+	return c
+end
+
+function UIKit.stroke(inst, col, thickness)
+	local s = Instance.new("UIStroke")
+	s.Color = col or Color.BORDER
+	s.Thickness = thickness or 1
+	s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	s.Parent = inst
+	return s
+end
+
+function UIKit.padding(inst, px)
+	local p = Instance.new("UIPadding")
+	p.PaddingTop    = UDim.new(0, px)
+	p.PaddingBottom = UDim.new(0, px)
+	p.PaddingLeft   = UDim.new(0, px)
+	p.PaddingRight  = UDim.new(0, px)
+	p.Parent = inst
+	return p
+end
+
+function UIKit.listLayout(parent, direction, pad)
+	local l = Instance.new("UIListLayout")
+	l.FillDirection = direction or Enum.FillDirection.Vertical
+	l.SortOrder = Enum.SortOrder.LayoutOrder
+	l.Padding = UDim.new(0, pad or 6)
+	l.Parent = parent
+	return l
+end
+
+function UIKit.label(text, size, col, font, parent)
+	local l = Instance.new("TextLabel")
+	l.BackgroundTransparency = 1
+	l.Text = text
+	l.TextColor3 = col or Color.TEXT
+	l.Font = font or Enum.Font.GothamBold
+	l.TextSize = size or 13
+	l.TextXAlignment = Enum.TextXAlignment.Left
+	l.TextYAlignment = Enum.TextYAlignment.Center
+	l.TextWrapped = true
+	l.Parent = parent
+	return l
+end
+
+function UIKit.button(name, text, col, parent)
+	local b = Instance.new("TextButton")
+	b.Name = name
+	b.BackgroundColor3 = col or Color.SURFACE
+	b.TextColor3 = Color.TEXT
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 12
+	b.Text = text
+	b.AutoButtonColor = false
+	b.BorderSizePixel = 0
+	b.Parent = parent
+	UIKit.corner(b, 6)
+	UIKit.stroke(b, Color.BORDER, 1)
+	local base = col or Color.SURFACE
+	b.MouseEnter:Connect(function()
+		b.BackgroundColor3 = Color3.new(
+			math.min(base.R + 0.1, 1), math.min(base.G + 0.1, 1), math.min(base.B + 0.1, 1))
+	end)
+	b.MouseLeave:Connect(function() b.BackgroundColor3 = base end)
+	return b
+end
+
+function UIKit.scroll(parent, bg)
+	local s = Instance.new("ScrollingFrame")
+	s.BackgroundColor3 = bg or Color.SURFACE
+	s.BorderSizePixel = 0
+	s.ScrollBarThickness = 5
+	s.ScrollBarImageColor3 = Color.BORDER
+	s.CanvasSize = UDim2.new(0, 0, 0, 0)
+	s.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	s.ScrollingDirection = Enum.ScrollingDirection.Y
+	s.ElasticBehavior = Enum.ElasticBehavior.Never
+	s.Parent = parent
+	return s
+end
+
+function UIKit.codeBox(scroll, editable)
+	local b = Instance.new("TextBox")
+	b.Size = UDim2.new(1, -8, 1, 0)
+	b.AutomaticSize = Enum.AutomaticSize.Y
+	b.BackgroundTransparency = 1
+	b.TextColor3 = Color.TEXT
+	b.PlaceholderColor3 = Color.DIM
+	b.ClearTextOnFocus = false
+	b.MultiLine = true
+	b.TextWrapped = false
+	b.TextXAlignment = Enum.TextXAlignment.Left
+	b.TextYAlignment = Enum.TextYAlignment.Top
+	b.Font = Enum.Font.Code
+	b.TextSize = 13
+	b.TextEditable = editable ~= false
+	b.Text = ""
+	b.Parent = scroll
+	UIKit.padding(b, 6)
+	return b
+end
+
+function UIKit.textField(parent, placeholder)
+	local t = Instance.new("TextBox")
+	t.BackgroundColor3 = Color.SURFACE
+	t.TextColor3 = Color.TEXT
+	t.PlaceholderText = placeholder or ""
+	t.PlaceholderColor3 = Color.DIM
+	t.ClearTextOnFocus = false
+	t.Font = Enum.Font.Code
+	t.TextSize = 12
+	t.TextXAlignment = Enum.TextXAlignment.Left
+	t.TextEditable = true
+	t.Text = ""
+	t.Parent = parent
+	UIKit.corner(t, 6)
+	UIKit.stroke(t, Color.BORDER)
+	UIKit.padding(t, 6)
+	return t
+end
+
+-- A small colored dot + bold label, used as a section header.
+function UIKit.sectionLabel(text, parent, order)
+	local f = Instance.new("Frame")
+	f.LayoutOrder = order
+	f.Size = UDim2.new(1, 0, 0, 18)
+	f.BackgroundTransparency = 1
+	f.Parent = parent
+	UIKit.listLayout(f, Enum.FillDirection.Horizontal, 5).VerticalAlignment = Enum.VerticalAlignment.Center
+	local dot = Instance.new("Frame")
+	dot.LayoutOrder = 1
+	dot.Size = UDim2.new(0, 6, 0, 6)
+	dot.BackgroundColor3 = Color.MUTED
+	dot.BorderSizePixel = 0
+	dot.Parent = f
+	UIKit.corner(dot, 3)
+	local lbl = UIKit.label(text, 11, Color.MUTED, Enum.Font.GothamBold, f)
+	lbl.LayoutOrder = 2
+	lbl.Size = UDim2.new(1, -14, 1, 0)
+	return f
+end
+
+-- A horizontal row container, useful for placing 2-3 buttons side by side.
+function UIKit.row(parent, order, height)
+	local f = Instance.new("Frame")
+	f.LayoutOrder = order
+	f.Size = UDim2.new(1, 0, 0, height or 28)
+	f.BackgroundTransparency = 1
+	f.Parent = parent
+	UIKit.listLayout(f, Enum.FillDirection.Horizontal, 4)
+	return f
+end
+
+return UIKit
+]]></ProtectedString>
+					<string name="ScriptGuid">{C7FA8C09-41EC-462B-8659-666C6721FA94}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">UIKit</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX22EDF9C179964CC989634E8A58355AE0">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- KeywordLibrary: owns the keyword/pattern list entirely via the plugin's
+-- own persistent settings (plugin:SetSetting/GetSetting). This is
+-- deliberately NOT stored as a ModuleScript in the game (e.g.
+-- ReplicatedStorage) — that tied the keyword list to whichever place
+-- happened to be open. Storing it on the plugin means it travels with
+-- the plugin itself across every place and every computer it's installed on.
+--
+-- Profiles: keywords are grouped into named profiles (e.g. "Default",
+-- "Strict", "UI-only"). Only one profile is "active" at a time — that's
+-- the one GetKeywords()/SaveKeywords()/SyncRemote() read and write, and
+-- the one RunAutoScan() in MainController scans with. Older installs that
+-- only ever had a flat keyword list get auto-migrated into a "Default"
+-- profile the first time GetProfiles() runs.
+local Utils = require(script.Parent.Utils)
+
+local HttpService = game:GetService("HttpService")
+
+local KEYWORDS_SETTING = "MaliciousFinder_Keywords" -- legacy, pre-profiles
+local REMOTE_URL_SETTING = "MaliciousFinder_RemoteUrl"
+local PROFILES_SETTING = "MaliciousFinder_Profiles"
+local ACTIVE_PROFILE_SETTING = "MaliciousFinder_ActiveProfile"
+
+local DEFAULT_PROFILE_NAME = "Default"
+
+local DEFAULT_KEYWORDS = {
+	"%.UserId%s*==%s*%d+","%.UserId%s*~=%s*%d+","Admin","admin",
+	"adminIds","allowedUsers","AnimationThread","bannedUsers",
+	"Bindford","blackList","Builder","Chatted",
+	"CollideFix","Colorize","Configurations","Controller",
+	"CoreMeta","coroutine%.wrap","damarco","debug%.getinfo",
+	"debug%.info","diagOutput","discord","EasyConfiguration",
+	"EffectBuilder","game%s*=","getfenv","GetNameFromUserIdAsync",
+	"GetTags","GetUserIdFromNameAsync","HandleAnimationWithConditionsAndChain","handleMissingCore",
+	"handleNoCore","HitboxCore","HttpService","HttpService%s*:%s*GetAsync%s*%(",
+	"HttpService%s*:%s*PostAsync%s*%(","initializeMeshPipeline","InsertService","JobId",
+	"jump2","Kick","Loader%.Value","loadstring",
+	"MarketplaceService%s*:%s*GetProductInfo","MaxWelds","MeshQualifier","NewConstants",
+	"ObjectGroup","ParticleThread","pcall","PerfectionWeld",
+	"PositionsFix","PromptProductPurchase","PromptPurchase","require",
+	"require%s*%(%s*%d+%s*%)","reverse","RoSync","RunEffectBuilder",
+	"script%.Source","script%s*=","serverstate","setfenv",
+	"ShouldBreakJoints","ShouldFixJoints","ShouldWeld","spread",
+	"string%.char%s*%(","suspicious","TeleportService","TextureConfiguration",
+	"UniversalSynSaveInstance","UserID","UserId","WeldSaver",
+	"whiteList",
+}
+
+local MAX_REMOTE_RESPONSE_BYTES = 100000
+local MAX_REMOTE_KEYWORDS = 1000
+local MAX_KEYWORD_LENGTH = 200
+local MAX_PROFILE_NAME_LENGTH = 60
+
+local KeywordLibrary = {}
+KeywordLibrary.__index = KeywordLibrary
+
+function KeywordLibrary.new(plugin)
+	local self = setmetatable({}, KeywordLibrary)
+	self.Plugin = plugin
+	return self
+end
+
+local function normalizeKeywords(lines)
+	local out, seen = {}, {}
+	for _, line in ipairs(lines) do
+		local trimmed = line:match("^%s*(.-)%s*$")
+		if trimmed and trimmed ~= "" and not seen[trimmed] then
+			seen[trimmed] = true
+			table.insert(out, trimmed)
+		end
+	end
+	table.sort(out, function(a, b) return string.lower(a) < string.lower(b) end)
+	return out
+end
+
+local function normalizeProfileName(name)
+	if type(name) ~= "string" then return nil end
+	local trimmed = name:match("^%s*(.-)%s*$")
+	if trimmed == "" then return nil end
+	if #trimmed > MAX_PROFILE_NAME_LENGTH then
+		trimmed = trimmed:sub(1, MAX_PROFILE_NAME_LENGTH)
+	end
+	return trimmed
+end
+
+----------------------------------------------------------------
+-- PROFILES
+----------------------------------------------------------------
+
+-- Returns the raw profiles table: { [name] = {keyword, keyword, ...} }.
+-- Handles first-run seeding and migration from the old flat keyword list.
+function KeywordLibrary:_loadProfilesRaw()
+	local ok, stored = pcall(function() return self.Plugin:GetSetting(PROFILES_SETTING) end)
+	if ok and type(stored) == "table" and next(stored) ~= nil then
+		return stored
+	end
+
+	-- Migration: an older install may have a flat keyword list saved under
+	-- the legacy setting. Bring it in as the "Default" profile instead of
+	-- silently discarding it.
+	local legacyOk, legacyKeywords = pcall(function() return self.Plugin:GetSetting(KEYWORDS_SETTING) end)
+	local seedKeywords
+	if legacyOk and type(legacyKeywords) == "table" and #legacyKeywords > 0 then
+		seedKeywords = normalizeKeywords(legacyKeywords)
+	else
+		seedKeywords = normalizeKeywords(DEFAULT_KEYWORDS)
+	end
+
+	local profiles = { [DEFAULT_PROFILE_NAME] = seedKeywords }
+	pcall(function() self.Plugin:SetSetting(PROFILES_SETTING, profiles) end)
+	pcall(function() self.Plugin:SetSetting(ACTIVE_PROFILE_SETTING, DEFAULT_PROFILE_NAME) end)
+	return profiles
+end
+
+function KeywordLibrary:_saveProfilesRaw(profiles)
+	return pcall(function() self.Plugin:SetSetting(PROFILES_SETTING, profiles) end)
+end
+
+-- Returns a sorted list of profile names.
+function KeywordLibrary:GetProfileNames()
+	local profiles = self:_loadProfilesRaw()
+	local names = {}
+	for name in pairs(profiles) do table.insert(names, name) end
+	table.sort(names, function(a, b) return string.lower(a) < string.lower(b) end)
+	return names
+end
+
+-- Returns the active profile name, falling back to the first available
+-- profile (alphabetically) if the stored active name no longer exists.
+function KeywordLibrary:GetActiveProfile()
+	local profiles = self:_loadProfilesRaw()
+	local ok, active = pcall(function() return self.Plugin:GetSetting(ACTIVE_PROFILE_SETTING) end)
+	if ok and type(active) == "string" and profiles[active] ~= nil then
+		return active
+	end
+	local names = self:GetProfileNames()
+	local fallback = names[1] or DEFAULT_PROFILE_NAME
+	pcall(function() self.Plugin:SetSetting(ACTIVE_PROFILE_SETTING, fallback) end)
+	return fallback
+end
+
+-- Switches the active profile. Returns (success, message).
+function KeywordLibrary:SetActiveProfile(name)
+	local normalized = normalizeProfileName(name)
+	if not normalized then return false, "Profile name can't be empty." end
+	local profiles = self:_loadProfilesRaw()
+	if profiles[normalized] == nil then
+		return false, ('Profile "%s" doesn\'t exist.'):format(normalized)
+	end
+	local ok, err = pcall(function() self.Plugin:SetSetting(ACTIVE_PROFILE_SETTING, normalized) end)
+	if not ok then return false, "Couldn't switch profile: " .. tostring(err) end
+	return true, ('Switched to "%s".'):format(normalized)
+end
+
+-- Creates a new empty (or seeded) profile and makes it active.
+-- Returns (success, message).
+function KeywordLibrary:CreateProfile(name, seedKeywords)
+	local normalized = normalizeProfileName(name)
+	if not normalized then return false, "Profile name can't be empty." end
+	local profiles = self:_loadProfilesRaw()
+	if profiles[normalized] ~= nil then
+		return false, ('A profile named "%s" already exists.'):format(normalized)
+	end
+	profiles[normalized] = normalizeKeywords(seedKeywords or {})
+	local ok, err = self:_saveProfilesRaw(profiles)
+	if not ok then return false, "Couldn't create profile: " .. tostring(err) end
+	self:SetActiveProfile(normalized)
+	return true, ('Created profile "%s".'):format(normalized)
+end
+
+-- Deletes a profile. Refuses to delete the last remaining profile. If the
+-- deleted profile was active, switches active to another one automatically.
+-- Returns (success, message).
+function KeywordLibrary:DeleteProfile(name)
+	local normalized = normalizeProfileName(name)
+	if not normalized then return false, "Profile name can't be empty." end
+	local profiles = self:_loadProfilesRaw()
+	if profiles[normalized] == nil then
+		return false, ('Profile "%s" doesn\'t exist.'):format(normalized)
+	end
+	local count = 0
+	for _ in pairs(profiles) do count += 1 end
+	if count <= 1 then
+		return false, "Can't delete the last remaining profile."
+	end
+	profiles[normalized] = nil
+	local ok, err = self:_saveProfilesRaw(profiles)
+	if not ok then return false, "Couldn't delete profile: " .. tostring(err) end
+
+	local activeOk, active = pcall(function() return self.Plugin:GetSetting(ACTIVE_PROFILE_SETTING) end)
+	if activeOk and active == normalized then
+		local remaining = {}
+		for n in pairs(profiles) do table.insert(remaining, n) end
+		table.sort(remaining, function(a, b) return string.lower(a) < string.lower(b) end)
+		pcall(function() self.Plugin:SetSetting(ACTIVE_PROFILE_SETTING, remaining[1]) end)
+	end
+	return true, ('Deleted profile "%s".'):format(normalized)
+end
+
+-- Renames a profile in place, preserving its keywords and active status.
+-- Returns (success, message).
+function KeywordLibrary:RenameProfile(oldName, newName)
+	local normalizedOld = normalizeProfileName(oldName)
+	local normalizedNew = normalizeProfileName(newName)
+	if not normalizedOld then return false, "Original profile name can't be empty." end
+	if not normalizedNew then return false, "New profile name can't be empty." end
+	if normalizedOld == normalizedNew then return true, "No change." end
+
+	local profiles = self:_loadProfilesRaw()
+	if profiles[normalizedOld] == nil then
+		return false, ('Profile "%s" doesn\'t exist.'):format(normalizedOld)
+	end
+	if profiles[normalizedNew] ~= nil then
+		return false, ('A profile named "%s" already exists.'):format(normalizedNew)
+	end
+
+	profiles[normalizedNew] = profiles[normalizedOld]
+	profiles[normalizedOld] = nil
+	local ok, err = self:_saveProfilesRaw(profiles)
+	if not ok then return false, "Couldn't rename profile: " .. tostring(err) end
+
+	local activeOk, active = pcall(function() return self.Plugin:GetSetting(ACTIVE_PROFILE_SETTING) end)
+	if activeOk and active == normalizedOld then
+		pcall(function() self.Plugin:SetSetting(ACTIVE_PROFILE_SETTING, normalizedNew) end)
+	end
+	return true, ('Renamed "%s" to "%s".'):format(normalizedOld, normalizedNew)
+end
+
+----------------------------------------------------------------
+-- MULTI-SELECT PROFILES (used for scanning — you can run a find with
+-- more than one profile's keywords merged into a single pass, separate
+-- from the single "active" profile above which is the edit/save target
+-- for the keyword text box).
+----------------------------------------------------------------
+
+local SELECTED_PROFILES_SETTING = "MaliciousFinder_SelectedProfiles"
+
+-- Returns the list of profile names currently selected for scanning.
+-- Falls back to just the active profile if nothing has been selected
+-- yet (first run / pre-multi-select installs), and drops any selected
+-- names that no longer exist (e.g. profile was deleted).
+function KeywordLibrary:GetSelectedProfileNames()
+	local profiles = self:_loadProfilesRaw()
+	local ok, stored = pcall(function() return self.Plugin:GetSetting(SELECTED_PROFILES_SETTING) end)
+
+	local selected = {}
+	if ok and type(stored) == "table" and #stored > 0 then
+		for _, name in ipairs(stored) do
+			if profiles[name] ~= nil then table.insert(selected, name) end
+		end
+	end
+
+	if #selected == 0 then
+		-- Nothing valid selected yet — default to the active profile.
+		selected = { self:GetActiveProfile() }
+	end
+
+	table.sort(selected, function(a, b) return string.lower(a) < string.lower(b) end)
+	return selected
+end
+
+-- Replaces the full scan-selection set. Silently drops names that don't
+-- exist. Refuses to save an empty set (falls back to active profile
+-- instead) so a scan always has at least one profile to run with.
+function KeywordLibrary:SetSelectedProfileNames(names)
+	local profiles = self:_loadProfilesRaw()
+	local cleaned, seen = {}, {}
+	for _, name in ipairs(names or {}) do
+		if profiles[name] ~= nil and not seen[name] then
+			seen[name] = true
+			table.insert(cleaned, name)
+		end
+	end
+	if #cleaned == 0 then
+		cleaned = { self:GetActiveProfile() }
+	end
+	pcall(function() self.Plugin:SetSetting(SELECTED_PROFILES_SETTING, cleaned) end)
+	return cleaned
+end
+
+-- Toggles one profile's membership in the scan-selection set. Won't
+-- remove the last remaining selected profile — a scan always needs at
+-- least one. Returns the new selected list.
+function KeywordLibrary:ToggleProfileSelected(name)
+	local normalized = normalizeProfileName(name)
+	if not normalized then return self:GetSelectedProfileNames() end
+
+	local current = self:GetSelectedProfileNames()
+	local currentSet, currentList = {}, {}
+	for _, n in ipairs(current) do
+		currentSet[n] = true
+		table.insert(currentList, n)
+	end
+
+	if currentSet[normalized] then
+		if #currentList <= 1 then
+			-- Refuse to deselect the last remaining profile.
+			return current
+		end
+		local filtered = {}
+		for _, n in ipairs(currentList) do
+			if n ~= normalized then table.insert(filtered, n) end
+		end
+		return self:SetSelectedProfileNames(filtered)
+	else
+		table.insert(currentList, normalized)
+		return self:SetSelectedProfileNames(currentList)
+	end
+end
+
+-- Merges + dedupes keyword lists from multiple named profiles into one
+-- flat list, ready to hand to ScanEngine:ScanAll().
+function KeywordLibrary:GetKeywordsForProfiles(names)
+	local profiles = self:_loadProfilesRaw()
+	local merged = {}
+	for _, name in ipairs(names or {}) do
+		local list = profiles[name]
+		if list then
+			for _, kw in ipairs(list) do table.insert(merged, kw) end
+		end
+	end
+	return normalizeKeywords(merged)
+end
+
+-- Convenience: merged keywords for whatever's currently selected for
+-- scanning. This is what a "Find Keywords" scan should use, NOT
+-- GetKeywords() (which is single-profile, edit-target only).
+function KeywordLibrary:GetKeywordsForSelectedProfiles()
+	return self:GetKeywordsForProfiles(self:GetSelectedProfileNames())
+end
+
+----------------------------------------------------------------
+-- ACTIVE-PROFILE KEYWORD ACCESS (existing call sites keep working)
+----------------------------------------------------------------
+
+-- Returns the current keyword list for the ACTIVE profile.
+function KeywordLibrary:GetKeywords()
+	local profiles = self:_loadProfilesRaw()
+	local active = self:GetActiveProfile()
+	return normalizeKeywords(profiles[active] or {})
+end
+
+-- Saves a raw list of keyword lines (e.g. from a UI text box) into the
+-- ACTIVE profile, normalizing (trim/dedupe/sort) first.
+function KeywordLibrary:SaveKeywords(rawLines)
+	local cleaned = {}
+	for _, line in ipairs(rawLines) do
+		local trimmed = line:match("^%s*(.-)%s*$")
+		if trimmed and trimmed ~= "" then table.insert(cleaned, trimmed) end
+	end
+	local normalized = normalizeKeywords(cleaned)
+	local profiles = self:_loadProfilesRaw()
+	local active = self:GetActiveProfile()
+	profiles[active] = normalized
+	local ok, err = self:_saveProfilesRaw(profiles)
+	if not ok then return false, "Save failed: " .. tostring(err), nil end
+	return true, ('Saved %d keyword(s) to "%s".'):format(#normalized, active), normalized
+end
+
+function KeywordLibrary:GetRemoteUrl()
+	local ok, url = pcall(function() return self.Plugin:GetSetting(REMOTE_URL_SETTING) end)
+	if ok and type(url) == "string" then return url end
+	return ""
+end
+
+function KeywordLibrary:SaveRemoteUrl(url)
+	pcall(function() self.Plugin:SetSetting(REMOTE_URL_SETTING, url) end)
+end
+
+local function parseRemoteKeywordText(body)
+	local lines = Utils.splitLines(body)
+	local keywords = {}
+	for _, line in ipairs(lines) do
+		local firstField = line:match("^([^,]*)") or line
+		firstField = firstField:match('^%s*"?(.-)"?%s*$')
+		if firstField ~= "" then table.insert(keywords, firstField) end
+	end
+	return keywords
+end
+
+-- Syncs a remote keyword list into the ACTIVE profile.
+-- Returns (success: boolean, message: string, keywordList: {string}?)
+function KeywordLibrary:SyncRemote(url)
+	url = url and url:match("^%s*(.-)%s*$") or ""
+	if url == "" then return false, "Enter a remote URL first." end
+	if url:match("/edit") or url:match("usp=sharing") then
+		return false, "That's a Google Sheets edit link, not the published CSV link. Use File > Share > Publish to web > CSV."
+	end
+	local ok, body = pcall(function() return HttpService:GetAsync(url) end)
+	if not ok then return false, "Remote sync failed: " .. tostring(body) end
+	if #body > MAX_REMOTE_RESPONSE_BYTES then
+		return false, ("Remote sync aborted: response too large (%d bytes)."):format(#body)
+	end
+	if body:lower():match("<!doctype") or body:lower():match("<html") then
+		return false, "Remote sync aborted: response looks like an HTML page, not CSV/text."
+	end
+	local remoteKeywords = parseRemoteKeywordText(body)
+	if #remoteKeywords == 0 then return false, "Remote sync: no keywords found at URL." end
+	if #remoteKeywords > MAX_REMOTE_KEYWORDS then
+		return false, ("Remote sync aborted: %d entries found, exceeds safety cap of %d."):format(#remoteKeywords, MAX_REMOTE_KEYWORDS)
+	end
+	for _, kw in ipairs(remoteKeywords) do
+		if #kw > MAX_KEYWORD_LENGTH then
+			return false, "Remote sync aborted: an entry exceeded " .. MAX_KEYWORD_LENGTH .. " characters."
+		end
+	end
+	local merged = {}
+	for _, v in ipairs(self:GetKeywords()) do table.insert(merged, v) end
+	for _, v in ipairs(remoteKeywords) do table.insert(merged, v) end
+	merged = normalizeKeywords(merged)
+
+	local profiles = self:_loadProfilesRaw()
+	local active = self:GetActiveProfile()
+	profiles[active] = merged
+	local writeOk, writeErr = self:_saveProfilesRaw(profiles)
+	if not writeOk then
+		return false, "Remote sync fetched OK but save failed: " .. tostring(writeErr)
+	end
+	self:SaveRemoteUrl(url)
+	return true, ('Remote sync OK — %d keyword(s) total (%d new from remote) in "%s".'):format(#merged, #remoteKeywords, active), merged
+end
+
+return KeywordLibrary
+]]></ProtectedString>
+					<string name="ScriptGuid">{0FD2559F-3CE8-4306-BE01-D1B83279D232}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">KeywordLibrary</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX2CE1466102374BD98FD7885280C67329">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- ScanEngine: runs each scan type over game:GetDescendants() and returns
+-- a flat array of result records. Stateless per-call except for the
+-- "own object" exclusion, which needs to know this script + the keyword
+-- module's names.
+local Utils = require(script.Parent.Utils)
+
+local ScanEngine = {}
+ScanEngine.__index = ScanEngine
+
+local MAX_SCAN_ENTRIES = 500
+local MAX_SCAN_ENTRY_LENGTH = 300
+local YIELD_EVERY = 150
+
+local REFERENCE_PROPERTY_CLASSES = {
+	WeldConstraint = {"Part0", "Part1"}, Weld = {"Part0", "Part1"},
+	Motor6D = {"Part0", "Part1"}, Motor = {"Part0", "Part1"},
+	ManualWeld = {"Part0", "Part1"}, ManualGlue = {"Part0", "Part1"},
+	RopeConstraint = {"Attachment0", "Attachment1"},
+	RodConstraint = {"Attachment0", "Attachment1"},
+	SpringConstraint = {"Attachment0", "Attachment1"},
+	BallSocketConstraint = {"Attachment0", "Attachment1"},
+	HingeConstraint = {"Attachment0", "Attachment1"},
+	PrismaticConstraint = {"Attachment0", "Attachment1"},
+	CylindricalConstraint = {"Attachment0", "Attachment1"},
+	LineForce = {"Attachment0", "Attachment1"},
+	AlignPosition = {"Attachment0"}, AlignOrientation = {"Attachment0"},
+	VectorForce = {"Attachment0"}, Torque = {"Attachment0"},
+}
+
+local function wordBounded(pattern)
+	return "%f[%a]" .. pattern .. "%f[%A]"
+end
+
+local PROFANITY_PATTERNS = {}
+do
+	local rawPatterns = {
+		"f+u+c+k+", "f+[^%a]*u+[^%a]*c+[^%a]*k+", "[f]+[u4@]+[c%(]+[k]+",
+		"sh[i!1]+t+", "b[i!1]+t+c+h+", "a+s+s+h+o+l+e+", "a+[s$]+[s$]+",
+		"d+[i!1]+c+k+", "c+[o0]+c+k+", "p+[u]+s+[s$]+[y]+", "c+u+n+t+",
+		"n+[i!1]+g+[g]+[e3]+[r]+", "n+[i!1]+g+[g]+[a@]+",
+		"f+[a@4]+g+[g]*[o0]*[t]*", "r+[e3]+t+[a@4]+r+d+",
+		"wh+[o0]+r+[e3]+", "[s$]+l+[u]+t+", "b+[a@4]+[s$]+t+[a@4]+r+d+",
+		"[ck]+r+[a@4]+p+", "p+[e3]+[e3]+[n]+[i!1]+[s$]+", "[a@4]+n+[u]+[s$]+",
+	}
+	for _, raw in ipairs(rawPatterns) do table.insert(PROFANITY_PATTERNS, wordBounded(raw)) end
+end
+
+function ScanEngine.new(ownScript)
+	local self = setmetatable({}, ScanEngine)
+	self.OwnScript = ownScript
+	self.CaseSensitivePlainSearch = false
+	self.YieldCallback = nil -- optional function(count) called periodically to keep Studio responsive
+	return self
+end
+
+function ScanEngine:_maybeYield(counter)
+	if counter % YIELD_EVERY == 0 then task.wait() end
+	if self.YieldCallback then self.YieldCallback(counter) end
+end
+
+function ScanEngine:_isOwnObject(obj)
+	local root = self.OwnScript.Parent -- the HE-Utilities folder (Init's parent)
+	if obj == self.OwnScript then return true end
+	if root and (obj == root or obj:IsDescendantOf(root)) then return true end
+
+	-- A dev/source copy of the plugin can coexist in ServerStorage
+	-- (separate Instance from the actual installed plugin) — exclude it
+	-- too so it doesn't self-flag its own keyword list as matches.
+	local devFolder = game:GetService("ServerStorage"):FindFirstChild("HE-Utilities")
+	if devFolder and (obj == devFolder or obj:IsDescendantOf(devFolder)) then return true end
+
+	-- Plugin UI (ours or any other plugin's) isn't real place content.
+	local pluginGuiService = game:GetService("PluginGuiService")
+	if obj:IsDescendantOf(pluginGuiService) then return true end
+
+	return false
+end
+
+local function makeRecord(obj, keyword, matchedText, lineNumber, resultType, previewText)
+	return {
+		ScriptObject = obj,
+		ScriptPath = obj:GetFullName(),
+		Keyword = keyword,
+		MatchedText = matchedText,
+		LineNumber = lineNumber,
+		ResultType = resultType,
+		PreviewText = previewText,
+	}
+end
+
+-- ScanAll: keyword/pattern search across scripts and UI text.
+function ScanEngine:ScanAll(keywordEntries)
+	if #keywordEntries == 0 then return {}, "Add at least one keyword or pattern.", 0, 0 end
+	if #keywordEntries > MAX_SCAN_ENTRIES then
+		return {}, ("Too many keywords (%d, max %d)."):format(#keywordEntries, MAX_SCAN_ENTRIES), 0, 0
+	end
+	for _, entry in ipairs(keywordEntries) do
+		if #entry > MAX_SCAN_ENTRY_LENGTH then
+			return {}, "A keyword exceeds " .. MAX_SCAN_ENTRY_LENGTH .. " characters.", 0, 0
+		end
+	end
+	local results = {}
+	local scannedCount, unreadableCount = 0, 0
+	for _, obj in ipairs(game:GetDescendants()) do
+		if Utils.isLuaScript(obj) and not self:_isOwnObject(obj) then
+			local ok, source = pcall(function() return obj.Source end)
+			scannedCount += 1
+			self:_maybeYield(scannedCount)
+			if ok and type(source) == "string" then
+				for entryIndex, entry in ipairs(keywordEntries) do
+					if entryIndex % 25 == 0 then task.wait() end
+					local patternMatches, patternValid = Utils.scanPatternDetailed(source, entry)
+					local matchesToUse = (not patternValid)
+						and Utils.scanPlainDetailed(source, entry, self.CaseSensitivePlainSearch)
+						or patternMatches
+					for _, matchInfo in ipairs(matchesToUse) do
+						local lineNumber = Utils.getLineNumberFromIndex(source, matchInfo.StartIndex)
+						table.insert(results, makeRecord(obj, entry, matchInfo.MatchText, lineNumber,
+							"CodeMatch", Utils.buildPreview(source, lineNumber, 3)))
+					end
+				end
+			else
+				unreadableCount += 1
+			end
+		elseif Utils.isTextUIObject(obj) and not self:_isOwnObject(obj) then
+			scannedCount += 1
+			self:_maybeYield(scannedCount)
+			for _, text in ipairs(Utils.getScannableTexts(obj)) do
+				if type(text) == "string" and text ~= "" then
+					for _, entry in ipairs(keywordEntries) do
+						local patternMatches, patternValid = Utils.scanPatternDetailed(text, entry)
+						local matchesToUse = patternValid and patternMatches or Utils.scanPlainDetailed(text, entry, self.CaseSensitivePlainSearch)
+						for _, matchInfo in ipairs(matchesToUse) do
+							table.insert(results, makeRecord(obj, entry, matchInfo.MatchText, 1, "UIText",
+								"[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\nText: " .. text))
+						end
+					end
+				end
+			end
+		end
+	end
+	return results, ("Done. Scanned: %d | Found: %d | Unreadable: %d"):format(scannedCount, #results, unreadableCount), scannedCount, #results
+end
+
+function ScanEngine:ScanAttributes()
+	local results, scannedCount = {}, 0
+	for _, obj in ipairs(game:GetDescendants()) do
+		if Utils.isAttributeScannable(obj) and not self:_isOwnObject(obj) then
+			scannedCount += 1
+			self:_maybeYield(scannedCount)
+			local attributes = obj:GetAttributes()
+			if next(attributes) ~= nil then
+				local attributePairs = {}
+				for attrName, attrValue in pairs(attributes) do
+					table.insert(attributePairs, tostring(attrName) .. " = " .. tostring(attrValue))
+				end
+				table.sort(attributePairs)
+				table.insert(results, makeRecord(obj, "Attribute", obj.ClassName .. " | " .. table.concat(attributePairs, ", "),
+					1, "Attributes", "[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\n" .. table.concat(attributePairs, "\n")))
+			end
+		end
+	end
+	return results, ("Attribute scan done. Scanned: %d | Objects with attributes: %d"):format(scannedCount, #results), scannedCount, #results
+end
+
+function ScanEngine:ScanProfanity()
+	local results, scannedCount = {}, 0
+	for _, obj in ipairs(game:GetDescendants()) do
+		scannedCount += 1
+		self:_maybeYield(scannedCount)
+		if Utils.isLuaScript(obj) and not self:_isOwnObject(obj) then
+			local ok, source = pcall(function() return obj.Source end)
+			if ok and type(source) == "string" then
+				local lowerSource = string.lower(source)
+				for _, pattern in ipairs(PROFANITY_PATTERNS) do
+					local matches, valid = Utils.scanPatternDetailed(lowerSource, pattern)
+					if valid then
+						for _, matchInfo in ipairs(matches) do
+							local lineNum = Utils.getLineNumberFromIndex(source, matchInfo.StartIndex)
+							table.insert(results, makeRecord(obj, pattern, source:sub(matchInfo.StartIndex, matchInfo.EndIndex),
+								lineNum, "Profanity", Utils.buildPreview(source, lineNum, 3)))
+						end
+					end
+				end
+			end
+		elseif Utils.isTextUIObject(obj) and not self:_isOwnObject(obj) then
+			for _, text in ipairs(Utils.getScannableTexts(obj)) do
+				if type(text) == "string" and text ~= "" then
+					local lowerText = string.lower(text)
+					for _, pattern in ipairs(PROFANITY_PATTERNS) do
+						local matches, valid = Utils.scanPatternDetailed(lowerText, pattern)
+						if valid and #matches > 0 then
+							table.insert(results, makeRecord(obj, "UIText", text, 1, "Profanity",
+								"[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\nText: " .. text))
+						end
+					end
+				end
+			end
+		end
+		if Utils.isAttributeScannable(obj) and not self:_isOwnObject(obj) then
+			for attrName, attrValue in pairs(obj:GetAttributes()) do
+				if type(attrValue) == "string" then
+					local lowerVal = string.lower(attrValue)
+					for _, pattern in ipairs(PROFANITY_PATTERNS) do
+						local matches, valid = Utils.scanPatternDetailed(lowerVal, pattern)
+						if valid and #matches > 0 then
+							table.insert(results, makeRecord(obj, "Attr:" .. attrName, attrName .. " = " .. attrValue, 1, "Profanity",
+								"[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\nAttribute: " .. attrName .. " = " .. attrValue))
+						end
+					end
+				end
+			end
+		end
+	end
+	return results, ("Profanity scan done | Scanned: %d | Found: %d"):format(scannedCount, #results), scannedCount, #results
+end
+
+function ScanEngine:ScanUserIds(specificIdText)
+	local results, scannedCount = {}, 0
+	local specificId = specificIdText and specificIdText:match("^%s*(%d+)%s*$") or nil
+	local userIdPatterns = {
+		"%.UserId%s*[=~]=?%s*%d+", "GetUserIdFromNameAsync", "GetNameFromUserIdAsync",
+		"[Aa]dmin[Ii][Dd]s?", "[Ww]hite[Ll]ist", "[Bb]lack[Ll]ist",
+		"[Aa]llowed[Uu]sers?", "[Bb]anned[Uu]sers?", "[Oo]wner[Ii][Dd]",
+	}
+	if specificId then table.insert(userIdPatterns, 1, "%f[%d]" .. specificId .. "%f[%D]") end
+	for _, obj in ipairs(game:GetDescendants()) do
+		scannedCount += 1
+		self:_maybeYield(scannedCount)
+		if Utils.isLuaScript(obj) and not self:_isOwnObject(obj) then
+			local ok, source = pcall(function() return obj.Source end)
+			if ok and type(source) == "string" then
+				for _, pattern in ipairs(userIdPatterns) do
+					local matches, valid = Utils.scanPatternDetailed(source, pattern)
+					if valid then
+						for _, matchInfo in ipairs(matches) do
+							local lineNum = Utils.getLineNumberFromIndex(source, matchInfo.StartIndex)
+							table.insert(results, makeRecord(obj, pattern, matchInfo.MatchText, lineNum, "UserId",
+								Utils.buildPreview(source, lineNum, 3)))
+						end
+					end
+				end
+			end
+		end
+		if Utils.isAttributeScannable(obj) and not self:_isOwnObject(obj) then
+			for attrName, attrValue in pairs(obj:GetAttributes()) do
+				local numVal = tonumber(tostring(attrValue))
+				if numVal then
+					local isMatch = specificId and (numVal == tonumber(specificId))
+						or (not specificId and numVal >= 100000 and numVal <= 9999999999)
+					if isMatch then
+						table.insert(results, makeRecord(obj, "AttributeUserId", attrName .. " = " .. tostring(attrValue), 1, "UserId",
+							"[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\nAttribute: " .. attrName .. " = " .. tostring(attrValue)))
+					end
+				end
+			end
+		end
+	end
+	local filterText = specificId and ("for ID " .. specificId) or "(all patterns)"
+	return results, ("UserID scan done %s | Scanned: %d | Found: %d"):format(filterText, scannedCount, #results), scannedCount, #results
+end
+
+function ScanEngine:ScanTags(filterTagText)
+	local CollectionService = game:GetService("CollectionService")
+	local results, scannedCount = {}, 0
+	local filterTag = filterTagText and filterTagText:match("^%s*(.-)%s*$") or ""
+	if filterTag == "" then filterTag = nil end
+	if filterTag then
+		local tagged = CollectionService:GetTagged(filterTag)
+		scannedCount = #tagged
+		for i, obj in ipairs(tagged) do
+			self:_maybeYield(i)
+			local tags = CollectionService:GetTags(obj)
+			table.insert(results, makeRecord(obj, filterTag, "[" .. obj.ClassName .. "] " .. table.concat(tags, ", "), 1, "Tag",
+				"[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\nTags: " .. table.concat(tags, ", ")))
+		end
+	else
+		for _, obj in ipairs(game:GetDescendants()) do
+			scannedCount += 1
+			self:_maybeYield(scannedCount)
+			local tags = CollectionService:GetTags(obj)
+			if #tags > 0 then
+				table.insert(results, makeRecord(obj, "Tag", "[" .. obj.ClassName .. "] " .. table.concat(tags, ", "), 1, "Tag",
+					"[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\nTags: " .. table.concat(tags, ", ")))
+			end
+		end
+	end
+	local filterText = filterTag and ('"' .. filterTag .. '"') or "(all tags)"
+	return results, ("Tag scan done %s | Scanned: %d | Found: %d"):format(filterText, scannedCount, #results), scannedCount, #results
+end
+
+local function tryResolveRequirePath(originScript, expr)
+	expr = expr:match("^%s*(.-)%s*$")
+	if expr == "" then return nil, false end
+	if expr:match("^%-?%d+$") then return nil, false end
+	if expr:match("[%+%-%*/%%]") then return nil, false end
+	if expr:match('^"') or expr:match("^'") then return nil, false end
+	local current, rest
+	local serviceName = expr:match('^game%s*:%s*GetService%(%s*"([%w_]+)"%s*%)')
+	if serviceName then
+		local ok, svc = pcall(game.GetService, game, serviceName)
+		if not ok then return nil, false end
+		current = svc
+		rest = expr:match('^game%s*:%s*GetService%(%s*"[%w_]+"%s*%)%.?(.*)$') or ""
+	elseif expr:match("^script") then
+		current = originScript
+		rest = expr:match("^script%.?(.*)$") or ""
+	elseif expr == "game" or expr:match("^game%.") then
+		current = game
+		rest = expr:match("^game%.?(.*)$") or ""
+	elseif expr == "workspace" or expr:match("^workspace%.") then
+		current = workspace
+		rest = expr:match("^workspace%.?(.*)$") or ""
+	else
+		return nil, false
+	end
+	if rest == "" then return current, true end
+	for segment in rest:gmatch("[^%.]+") do
+		segment = segment:match("^%s*(.-)%s*$")
+		if current == nil then return nil, true end
+		local waitName = segment:match('^WaitForChild%(%s*"([^"]+)"%s*%)$')
+		local findName = segment:match('^FindFirstChild%(%s*"([^"]+)"%s*%)$')
+		if segment == "Parent" then
+			current = current.Parent
+		elseif waitName then
+			current = current:FindFirstChild(waitName)
+		elseif findName then
+			current = current:FindFirstChild(findName)
+		elseif segment:match("^[%a_][%w_]*$") then
+			local ok, child = pcall(current.FindFirstChild, current, segment)
+			if not ok then return nil, false end
+			current = child
+		else
+			return nil, false
+		end
+	end
+	return current, true
+end
+
+function ScanEngine:ScanMissingReferences()
+	local results, scannedCount = {}, 0
+	for _, obj in ipairs(game:GetDescendants()) do
+		scannedCount += 1
+		self:_maybeYield(scannedCount)
+		if self:_isOwnObject(obj) then continue end
+		if obj:IsA("ObjectValue") and obj.Value == nil then
+			table.insert(results, makeRecord(obj, "ObjectValue.Value", "ObjectValue '" .. obj.Name .. "' has no Value set",
+				1, "MissingRef", "[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\nValue: nil"))
+		end
+		local refProps = REFERENCE_PROPERTY_CLASSES[obj.ClassName]
+		if refProps then
+			for _, propName in ipairs(refProps) do
+				local ok, value = pcall(function() return obj[propName] end)
+				if ok and value == nil then
+					table.insert(results, makeRecord(obj, obj.ClassName .. "." .. propName,
+						obj.ClassName .. " '" .. obj.Name .. "' has no " .. propName, 1, "MissingRef",
+						"[" .. obj.ClassName .. "] " .. obj:GetFullName() .. "\n" .. propName .. ": nil"))
+				end
+			end
+		end
+		if Utils.isLuaScript(obj) then
+			local ok, source = pcall(function() return obj.Source end)
+			if ok and type(source) == "string" then
+				local searchPos = 1
+				while true do
+					local sIdx, eIdx, expr = source:find("require%s*%(%s*([^%)]-)%s*%)", searchPos)
+					if not sIdx then break end
+					searchPos = eIdx + 1
+					local resolved, attempted = tryResolveRequirePath(obj, expr)
+					if attempted and resolved == nil then
+						local lineNum = Utils.getLineNumberFromIndex(source, sIdx)
+						table.insert(results, makeRecord(obj, "require()", "require(" .. expr .. ") could not be resolved",
+							lineNum, "MissingRef", Utils.buildPreview(source, lineNum, 3)))
+					end
+				end
+			end
+		end
+	end
+	return results, ("Missing-reference scan done. Scanned: %d | Found: %d"):format(scannedCount, #results), scannedCount, #results
+end
+
+return ScanEngine
+]]></ProtectedString>
+					<string name="ScriptGuid">{ED4F8B49-6EF1-407F-83FE-ACAC8F235F94}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">ScanEngine</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXF353C7B9B641487183F3CAD4CD792C2D">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- ResultsManager: owns the current scan-results array, applies dedupe,
+-- and produces summary counts by result type.
+local Theme = require(script.Parent.Theme)
+
+local ResultsManager = {}
+ResultsManager.__index = ResultsManager
+
+function ResultsManager.new()
+	local self = setmetatable({}, ResultsManager)
+	self.Results = {}
+	self.DedupeEnabled = true
+	return self
+end
+
+function ResultsManager:Clear()
+	self.Results = {}
+end
+
+-- Takes a raw results array (as returned by ScanEngine) and stores it,
+-- applying dedupe if enabled.
+function ResultsManager:SetResults(rawResults)
+	if not self.DedupeEnabled then
+		self.Results = rawResults
+		return
+	end
+	local seen = {}
+	local out = {}
+	for _, record in ipairs(rawResults) do
+		local key = record.ScriptPath .. "|" .. tostring(record.LineNumber) .. "|" .. record.ResultType
+		if record.ResultType ~= "CodeMatch" and record.ResultType ~= "UIText" then
+			key = key .. "|" .. record.Keyword .. "|" .. record.MatchedText
+		end
+		if not seen[key] then
+			seen[key] = true
+			table.insert(out, record)
+		end
+	end
+	self.Results = out
+end
+
+function ResultsManager:GetResults()
+	return self.Results
+end
+
+function ResultsManager:GetSummaryText()
+	if #self.Results == 0 then return "No results." end
+	local counts = {}
+	for _, record in ipairs(self.Results) do
+		counts[record.ResultType] = (counts[record.ResultType] or 0) + 1
+	end
+	local order = {"CodeMatch","Profanity","UserId","UIText","Attributes","Tag","MissingRef","Recognized","Flagged"}
+	local parts = {}
+	for _, key in ipairs(order) do
+		if counts[key] then
+			table.insert(parts, (Theme.SeverityLabel[key] or key) .. ": " .. counts[key])
+		end
+	end
+	return tostring(#self.Results) .. " total   " .. table.concat(parts, "   ")
+end
+
+return ResultsManager
+]]></ProtectedString>
+					<string name="ScriptGuid">{531CBB3D-3F14-4FE7-9585-F1C82F15FCD3}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">ResultsManager</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXFAF5D15DEB294BFBB897FA9BBC62ADBF">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- MainController: builds the plugin widget UI. Simplified to a single
+-- Results view — no manual Scan/Settings tabs, no Copy Match button, no
+-- report-to-sheet feature. Scanning runs automatically on open and on a
+-- recurring interval, using whatever keywords are currently in the
+-- KeywordLibrary module.
+local UIKit = require(script.Parent.UIKit)
+local Theme = require(script.Parent.Theme)
+local Utils = require(script.Parent.Utils)
+local KeywordLibrary = require(script.Parent.KeywordLibrary)
+local ScanEngine = require(script.Parent.ScanEngine)
+local ResultsManager = require(script.Parent.ResultsManager)
+local AssetSyncEngine = require(script.Parent.AssetSyncEngine)
+local SignatureMatcher = require(script.Parent.SignatureMatcher)
+
+local Color = Theme.Color
+local PLUGIN_VERSION = "0.2.0"
+
+local MainController = {}
+MainController.__index = MainController
+
+function MainController.new(plugin, ownScript)
+	local self = setmetatable({}, MainController)
+	self.Plugin = plugin
+	self.OwnScript = ownScript
+	self.ReplicatedStorage = game:GetService("ReplicatedStorage")
+	self.Selection = game:GetService("Selection")
+
+	self.KeywordLibrary = KeywordLibrary.new(plugin)
+	self.ScanEngine = ScanEngine.new(ownScript)
+	self.Results = ResultsManager.new()
+	self.AssetSync = AssetSyncEngine.new()
+
+	self.IsScanning = false
+	self.SelectedRecord = nil
+	self.ActiveFilter = "All"
+	self.ExpandedGroups = {}
+
+	-- Tracks which matches we've already notified on (by signature) so
+	-- RunAutoScan only notifies on matches that are NEW since the last
+	-- scan, not every match every time. Starts false so the very first
+	-- scan of a session (which can surface a game's entire existing
+	-- backlog) doesn't fire a wall of notifications at once.
+	self._notifiedSignatures = {}
+	self._hasScannedOnce = false
+	return self
+end
+
+-- Result types that carry a real source-code line (as opposed to UI text,
+-- attributes, or tags, which don't have a meaningful "line" to arrow at).
+local NOTIFIABLE_RESULT_TYPES = {
+	CodeMatch = true,
+	Profanity = true,
+	UserId = true,
+	Recognized = true,
+	Flagged = true,
+}
+
+local function recordSignature(record)
+	return tostring(record.ScriptPath) .. "|" .. tostring(record.LineNumber) .. "|"
+		.. tostring(record.Keyword) .. "|" .. tostring(record.MatchedText)
+end
+
+-- Pulls the actual matched source line (without the ">> N | " prefix) out
+-- of a record's PreviewText, then wraps the matched substring in arrows
+-- so it's obvious at a glance what tripped the scan.
+local function buildArrowedLine(record)
+	local matchedLine = nil
+	for line in tostring(record.PreviewText or ""):gmatch("[^\n]+") do
+		if line:sub(1, 3) == ">> " then
+			matchedLine = line:match("^>> %d+ | (.*)$")
+			break
+		end
+	end
+	matchedLine = matchedLine or tostring(record.MatchedText or "")
+
+	local needle = tostring(record.MatchedText or "")
+	if needle ~= "" then
+		local s, e = matchedLine:find(needle, 1, true)
+		if s then
+			return matchedLine:sub(1, s - 1) .. ">> " .. matchedLine:sub(s, e) .. " <<" .. matchedLine:sub(e + 1)
+		end
+	end
+	return matchedLine
+end
+
+----------------------------------------------------------------
+-- WIDGET SHELL (single page, no tabs)
+----------------------------------------------------------------
+
+function MainController:_buildShell()
+	local widgetInfo = DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Right, true, false, 720, 700, 560, 560)
+	self.Widget = self.Plugin:CreateDockWidgetPluginGui("HEUtilitiesWidget", widgetInfo)
+	self.Widget.Title = "HE-Utilities v" .. PLUGIN_VERSION
+
+	local root = Instance.new("Frame")
+	root.Size = UDim2.fromScale(1, 1)
+	root.BackgroundColor3 = Color.BG
+	root.BorderSizePixel = 0
+	root.Parent = self.Widget
+	UIKit.padding(root, 8)
+	UIKit.listLayout(root, Enum.FillDirection.Vertical, 6)
+
+	-- Header
+	local header = Instance.new("Frame")
+	header.LayoutOrder = 1
+	header.Size = UDim2.new(1, 0, 0, 34)
+	header.BackgroundColor3 = Color.PANEL
+	header.BorderSizePixel = 0
+	header.Parent = root
+	UIKit.corner(header, 8)
+	UIKit.stroke(header, Color.BORDER)
+	UIKit.padding(header, 8)
+	local hList = UIKit.listLayout(header, Enum.FillDirection.Horizontal, 8)
+	hList.VerticalAlignment = Enum.VerticalAlignment.Center
+
+	local hDot = Instance.new("Frame")
+	hDot.LayoutOrder = 1
+	hDot.Size = UDim2.new(0, 10, 0, 10)
+	hDot.BackgroundColor3 = Color.RED
+	hDot.BorderSizePixel = 0
+	hDot.Parent = header
+	UIKit.corner(hDot, 5)
+
+	local hTitle = UIKit.label("HE-Utilities v" .. PLUGIN_VERSION, 15, Color.TEXT, Enum.Font.GothamBold, header)
+	hTitle.LayoutOrder = 2
+	hTitle.Size = UDim2.new(1, -30, 1, 0)
+
+	-- Tab bar: Results / Keywords
+	local tabBar = Instance.new("Frame")
+	tabBar.LayoutOrder = 2
+	tabBar.Size = UDim2.new(1, 0, 0, 30)
+	tabBar.BackgroundTransparency = 1
+	tabBar.Parent = root
+	UIKit.listLayout(tabBar, Enum.FillDirection.Horizontal, 4)
+
+	self.TabButtons = {}
+	self.TabPages = {}
+	local tabNames = {"Results", "Keywords", "Send Info", "Sync"}
+	for i, name in ipairs(tabNames) do
+		local btn = UIKit.button("Tab_" .. name, name, Color.SURFACE, tabBar)
+		btn.Size = UDim2.new(1 / #tabNames, -3, 1, 0)
+		btn.LayoutOrder = i
+		self.TabButtons[name] = btn
+		btn.MouseButton1Click:Connect(function() self:ShowTab(name) end)
+	end
+
+	self.PageContainer = Instance.new("Frame")
+	self.PageContainer.LayoutOrder = 3
+	self.PageContainer.Size = UDim2.new(1, 0, 1, -76)
+	self.PageContainer.BackgroundTransparency = 1
+	self.PageContainer.Parent = root
+
+	for _, name in ipairs(tabNames) do
+		local page = UIKit.scroll(self.PageContainer, Color.PANEL)
+		page.Size = UDim2.fromScale(1, 1)
+		page.Visible = false
+		UIKit.corner(page, 8)
+		UIKit.stroke(page, Color.BORDER)
+		UIKit.padding(page, 10)
+		UIKit.listLayout(page, Enum.FillDirection.Vertical, 8)
+		self.TabPages[name] = page
+	end
+
+	-- Backwards-compatible alias: existing Results-tab builder code refers
+	-- to self.Page as the container it builds into.
+	self.Page = self.TabPages.Results
+end
+
+function MainController:ShowTab(name)
+	for tabName, page in pairs(self.TabPages) do
+		page.Visible = (tabName == name)
+		self.TabButtons[tabName].BackgroundColor3 = (tabName == name) and Color.BLUE_DIM or Color.SURFACE
+	end
+end
+
+----------------------------------------------------------------
+-- RESULTS PAGE
+----------------------------------------------------------------
+
+function MainController:_buildKeywordsTab()
+	local page = self.TabPages.Keywords
+
+	----------------------------------------------------------------
+	-- PROFILES
+	----------------------------------------------------------------
+	UIKit.sectionLabel("Profile", page, 1)
+
+	self.ProfileRow = Instance.new("Frame")
+	self.ProfileRow.LayoutOrder = 2
+	self.ProfileRow.Size = UDim2.new(1, 0, 0, 30)
+	self.ProfileRow.BackgroundTransparency = 1
+	self.ProfileRow.Parent = page
+	local profileLayout = UIKit.listLayout(self.ProfileRow, Enum.FillDirection.Horizontal, 4)
+	profileLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	local newProfileRow = UIKit.row(page, 3, 30)
+	self.NewProfileField = UIKit.textField(newProfileRow, "New profile name...")
+	self.NewProfileField.Size = UDim2.new(0.7, -2, 1, 0)
+	self.CreateProfileButton = UIKit.button("CreateProfile", "+ Create", Color.BLUE_DIM, newProfileRow)
+	self.CreateProfileButton.Size = UDim2.new(0.3, -2, 1, 0)
+
+	local manageProfileRow = UIKit.row(page, 4, 30)
+	self.RenameProfileButton = UIKit.button("RenameProfile", "Rename Active", Color.SURFACE, manageProfileRow)
+	self.RenameProfileButton.Size = UDim2.new(0.5, -2, 1, 0)
+	self.DeleteProfileButton = UIKit.button("DeleteProfile", "Delete Active", Color.SURFACE, manageProfileRow)
+	self.DeleteProfileButton.Size = UDim2.new(0.5, -2, 1, 0)
+
+	self.ProfileStatusLabel = UIKit.label("", 11, Color.MUTED, Enum.Font.Gotham, page)
+	self.ProfileStatusLabel.LayoutOrder = 5
+	self.ProfileStatusLabel.Size = UDim2.new(1, 0, 0, 18)
+	self.ProfileStatusLabel.TextWrapped = true
+
+	self.CreateProfileButton.MouseButton1Click:Connect(function()
+		local ok, msg = self.KeywordLibrary:CreateProfile(self.NewProfileField.Text)
+		self.ProfileStatusLabel.Text = msg
+		if ok then
+			self.NewProfileField.Text = ""
+			self:_refreshProfileUI()
+		end
+	end)
+
+	self.RenameProfileButton.MouseButton1Click:Connect(function()
+		local newName = self.NewProfileField.Text
+		if newName == nil or newName:match("^%s*$") then
+			self.ProfileStatusLabel.Text = "Type the new name in the field above, then press Rename Active."
+			return
+		end
+		local active = self.KeywordLibrary:GetActiveProfile()
+		local ok, msg = self.KeywordLibrary:RenameProfile(active, newName)
+		self.ProfileStatusLabel.Text = msg
+		if ok then
+			self.NewProfileField.Text = ""
+			self:_refreshProfileUI()
+		end
+	end)
+
+	self.DeleteProfileButton.MouseButton1Click:Connect(function()
+		local active = self.KeywordLibrary:GetActiveProfile()
+		local ok, msg = self.KeywordLibrary:DeleteProfile(active)
+		self.ProfileStatusLabel.Text = msg
+		if ok then
+			self:_refreshProfileUI()
+		end
+	end)
+
+	----------------------------------------------------------------
+	-- KEYWORDS (for the active profile)
+	----------------------------------------------------------------
+	UIKit.sectionLabel("Keywords / Lua Patterns", page, 6)
+	local keywordScroll = UIKit.scroll(page, Color.SURFACE)
+	keywordScroll.LayoutOrder = 7
+	keywordScroll.Size = UDim2.new(1, 0, 0, 320)
+	UIKit.corner(keywordScroll, 6)
+	UIKit.stroke(keywordScroll, Color.BORDER)
+	self.KeywordBox = UIKit.codeBox(keywordScroll, true)
+	self.KeywordBox.PlaceholderText = "One keyword or Lua pattern per line..."
+
+	-- Auto-save: debounced so it doesn't save on every keystroke, just
+	-- shortly after the user stops typing.
+	self.KeywordBox:GetPropertyChangedSignal("Text"):Connect(function()
+		self._pendingKeywordSave = true
+		task.delay(1, function()
+			if self._pendingKeywordSave then
+				self._pendingKeywordSave = false
+				local lines = Utils.splitLines(self.KeywordBox.Text)
+				local ok, msg = self.KeywordLibrary:SaveKeywords(lines)
+				if self.KeywordStatusLabel then
+					self.KeywordStatusLabel.Text = msg
+				end
+			end
+		end)
+	end)
+
+	local btnRow = UIKit.row(page, 8, 30)
+	self.SaveKeywordsButton = UIKit.button("SaveKeywords", "Save", Color.BLUE_DIM, btnRow)
+	self.SaveKeywordsButton.Size = UDim2.new(0.5, -2, 1, 0)
+	self.ReloadKeywordsButton = UIKit.button("ReloadKeywords", "Reload", Color.SURFACE, btnRow)
+	self.ReloadKeywordsButton.Size = UDim2.new(0.5, -2, 1, 0)
+
+	self.KeywordStatusLabel = UIKit.label("", 11, Color.MUTED, Enum.Font.Gotham, page)
+	self.KeywordStatusLabel.LayoutOrder = 9
+	self.KeywordStatusLabel.Size = UDim2.new(1, 0, 0, 18)
+	self.KeywordStatusLabel.TextWrapped = true
+
+	self.SaveKeywordsButton.MouseButton1Click:Connect(function()
+		local lines = Utils.splitLines(self.KeywordBox.Text)
+		local ok, msg, saved = self.KeywordLibrary:SaveKeywords(lines)
+		self.KeywordStatusLabel.Text = msg
+		if ok and saved then
+			self.KeywordBox.Text = table.concat(saved, "\n")
+		end
+	end)
+
+	self.ReloadKeywordsButton.MouseButton1Click:Connect(function()
+		local count = self:_loadKeywordsFromModule()
+		self.KeywordStatusLabel.Text = ("Reloaded %d keyword(s) from module."):format(count)
+	end)
+
+	self:_refreshProfileUI()
+end
+
+-- Rebuilds the profile button row from KeywordLibrary's profile list,
+-- highlighting whichever one is active, and reloads the keyword box to
+-- match. Call after any create/rename/delete/switch.
+-- Profile row shows two independent things per button:
+--   - a checkmark + green outline = this profile is INCLUDED when running
+--     a keyword find (multi-select; more than one can be checked at once)
+--   - a blue-filled background = this is the single EDIT TARGET whose
+--     keyword list is loaded into the text box below for viewing/editing
+-- Clicking a button toggles its scan-inclusion AND makes it the edit
+-- target, so the common case (click a profile, see + tweak its keywords,
+-- have it included in the next scan) stays a single click.
+function MainController:_refreshProfileUI()
+	for _, child in ipairs(self.ProfileRow:GetChildren()) do
+		if child:IsA("TextButton") then child:Destroy() end
+	end
+
+	local names = self.KeywordLibrary:GetProfileNames()
+	local active = self.KeywordLibrary:GetActiveProfile()
+	local selectedSet = {}
+	for _, n in ipairs(self.KeywordLibrary:GetSelectedProfileNames()) do
+		selectedSet[n] = true
+	end
+
+	for i, name in ipairs(names) do
+		local isSelected = selectedSet[name] == true
+		local label = (isSelected and "\226\156\147 " or "") .. name
+		local btn = UIKit.button("Profile_" .. name, label, (name == active) and Color.BLUE_DIM or Color.SURFACE, self.ProfileRow)
+		btn.LayoutOrder = i
+		btn.AutomaticSize = Enum.AutomaticSize.X
+		btn.Size = UDim2.new(0, 0, 1, 0)
+		local padding = Instance.new("UIPadding")
+		padding.PaddingLeft = UDim.new(0, 10)
+		padding.PaddingRight = UDim.new(0, 10)
+		padding.Parent = btn
+
+		if isSelected then
+			local stroke = Instance.new("UIStroke")
+			stroke.Color = Color.GREEN
+			stroke.Thickness = 1.5
+			stroke.Parent = btn
+		end
+
+		btn.MouseButton1Click:Connect(function()
+			self.KeywordLibrary:ToggleProfileSelected(name)
+			local ok, msg = self.KeywordLibrary:SetActiveProfile(name)
+			if ok then
+				self.ProfileStatusLabel.Text = msg
+			end
+			self:_refreshProfileUI()
+		end)
+	end
+
+	local selectedNames = self.KeywordLibrary:GetSelectedProfileNames()
+	self.ProfileStatusLabel.Text = "Scanning with: " .. table.concat(selectedNames, ", ")
+
+	self:_loadKeywordsFromModule()
+end
+
+function MainController:_loadKeywordsFromModule()
+	local moduleKeywords = self.KeywordLibrary:GetKeywords()
+	self.KeywordBox.Text = table.concat(moduleKeywords, "\n")
+	return #moduleKeywords
+end
+
+----------------------------------------------------------------
+-- SEND INFO (post a typed message to a Google Sheet via Apps Script)
+----------------------------------------------------------------
+
+local SHEET_WEBHOOK_URL_SETTING = "MaliciousFinder_SheetWebhookUrl"
+
+-- Set your Google Apps Script Web App URL here to have it pre-filled
+-- automatically. Leave as "" to require users to paste their own.
+local DEFAULT_SHEET_WEBHOOK_URL = ""
+
+function MainController:_buildSendInfoTab()
+	local page = self.TabPages["Send Info"]
+
+	self.SheetUrlField = UIKit.textField(page, "Paste your Apps Script Web App URL...")
+	self.SheetUrlField.LayoutOrder = 1
+	self.SheetUrlField.Size = UDim2.new(1, 0, 0, 32)
+
+	local ok, savedUrl = pcall(function() return self.Plugin:GetSetting(SHEET_WEBHOOK_URL_SETTING) end)
+	if ok and type(savedUrl) == "string" and savedUrl ~= "" then
+		self.SheetUrlField.Text = savedUrl
+	else
+		self.SheetUrlField.Text = DEFAULT_SHEET_WEBHOOK_URL
+	end
+
+	-- The webhook URL is a backend detail, not something users see or
+	-- edit — always hidden.
+	self.SheetUrlField.Visible = false
+
+	UIKit.sectionLabel("Message", page, 3)
+	local messageScroll = UIKit.scroll(page, Color.SURFACE)
+	messageScroll.LayoutOrder = 4
+	messageScroll.Size = UDim2.new(1, 0, 0, 160)
+	UIKit.corner(messageScroll, 6)
+	UIKit.stroke(messageScroll, Color.BORDER)
+	self.SendInfoBox = UIKit.codeBox(messageScroll, true)
+	self.SendInfoBox.PlaceholderText = "Type what you want to send..."
+
+	self.SendInfoButton = UIKit.button("SendInfo", "Send to Google Sheet", Color.BLUE_DIM, page)
+	self.SendInfoButton.LayoutOrder = 5
+	self.SendInfoButton.Size = UDim2.new(1, 0, 0, 32)
+
+	self.SendInfoStatusLabel = UIKit.label("", 11, Color.MUTED, Enum.Font.Gotham, page)
+	self.SendInfoStatusLabel.LayoutOrder = 6
+	self.SendInfoStatusLabel.Size = UDim2.new(1, 0, 0, 18)
+	self.SendInfoStatusLabel.TextWrapped = true
+
+	self.SendInfoButton.MouseButton1Click:Connect(function()
+		local url = self.SheetUrlField.Text:match("^%s*(.-)%s*$")
+		local message = self.SendInfoBox.Text:match("^%s*(.-)%s*$")
+
+		if url == "" then
+			self.SendInfoStatusLabel.Text = "Enter a Google Apps Script Web App URL first."
+			return
+		end
+		if message == "" then
+			self.SendInfoStatusLabel.Text = "Type a message first."
+			return
+		end
+
+		pcall(function() self.Plugin:SetSetting(SHEET_WEBHOOK_URL_SETTING, url) end)
+
+		self.SendInfoStatusLabel.Text = "Sending..."
+		local HttpService = game:GetService("HttpService")
+		local payload = HttpService:JSONEncode({
+			message = message,
+			sentAt = os.date("%Y-%m-%d %H:%M:%S"),
+		})
+
+		local ok, result = pcall(function()
+			return HttpService:PostAsync(url, payload, Enum.HttpContentType.ApplicationJson)
+		end)
+
+		if ok then
+			self.SendInfoStatusLabel.Text = "Sent successfully."
+			self.SendInfoBox.Text = ""
+		else
+			self.SendInfoStatusLabel.Text = "Send failed: " .. tostring(result)
+		end
+	end)
+end
+
+----------------------------------------------------------------
+-- SYNC TAB (AssetSync dashboard: status / last sync / scan)
+----------------------------------------------------------------
+
+function MainController:_buildSyncTab()
+	local page = self.TabPages.Sync
+
+	UIKit.sectionLabel("Auto-Sync", page, 1)
+
+	local toggleRow = UIKit.row(page, 2, 30)
+	self.SyncToggleButton = UIKit.button("SyncToggle", "Enabled", Color.GREEN, toggleRow)
+	self.SyncToggleButton.Size = UDim2.fromScale(1, 1)
+
+	self.SyncStatusLabel = UIKit.label("\226\151\143 Auto-Sync: ENABLED", 14, Color.GREEN, Enum.Font.GothamBold, page)
+	self.SyncStatusLabel.LayoutOrder = 3
+	self.SyncStatusLabel.Size = UDim2.new(1, 0, 0, 22)
+
+	UIKit.sectionLabel("Last Sync", page, 4)
+	self.SyncDetailLabel = UIKit.label("No syncs yet", 12, Color.MUTED, Enum.Font.Gotham, page)
+	self.SyncDetailLabel.LayoutOrder = 5
+	self.SyncDetailLabel.Size = UDim2.new(1, 0, 0, 18)
+	self.SyncDetailLabel.TextWrapped = true
+
+	UIKit.sectionLabel("Last Scan", page, 6)
+	self.SyncScanLabel = UIKit.label("No scans yet", 12, Color.MUTED, Enum.Font.Gotham, page)
+	self.SyncScanLabel.LayoutOrder = 7
+	self.SyncScanLabel.Size = UDim2.new(1, 0, 0, 18)
+	self.SyncScanLabel.TextWrapped = true
+
+	UIKit.sectionLabel("Descendant Removed", page, 8)
+	self.SyncRemovalLabel = UIKit.label("No removals detected", 12, Color.MUTED, Enum.Font.Gotham, page)
+	self.SyncRemovalLabel.LayoutOrder = 9
+	self.SyncRemovalLabel.Size = UDim2.new(1, 0, 0, 18)
+	self.SyncRemovalLabel.TextWrapped = true
+
+	self.SyncToggleButton.MouseButton1Click:Connect(function()
+		self.AssetSync:SetEnabled(not self.AssetSync.Enabled)
+	end)
+
+	self.AssetSync:Start({
+		OnStatusChange = function(enabled)
+			self.SyncToggleButton.Text = enabled and "Enabled" or "Disabled"
+			self.SyncToggleButton.BackgroundColor3 = enabled and Color.GREEN or Color.RED_DIM
+			self.SyncStatusLabel.Text = enabled
+				and "\226\151\143 Auto-Sync: ENABLED"
+				or "\226\151\143 Auto-Sync: DISABLED"
+			self.SyncStatusLabel.TextColor3 = enabled and Color.GREEN or Color.RED
+		end,
+		OnDetailChange = function(text, isError)
+			self.SyncDetailLabel.Text = text
+			self.SyncDetailLabel.TextColor3 = isError and Color.AMBER or Color.MUTED
+		end,
+		OnScanChange = function(text, hadIssues)
+			self.SyncScanLabel.Text = "\226\151\143 " .. text
+			self.SyncScanLabel.TextColor3 = hadIssues and Color.AMBER or Color.GREEN
+		end,
+		OnRemovalChange = function(text, wasRemoval)
+			self.SyncRemovalLabel.Text = wasRemoval and ("\226\151\143 " .. text) or text
+			self.SyncRemovalLabel.TextColor3 = wasRemoval and Color.RED or Color.MUTED
+		end,
+	})
+
+end
+
+function MainController:_buildResultsPage()
+	local page = self.Page
+
+	self.StatusLabel = Instance.new("TextLabel")
+	self.StatusLabel.LayoutOrder = 1
+	self.StatusLabel.Size = UDim2.new(1, 0, 0, 32)
+	self.StatusLabel.BackgroundTransparency = 1
+	self.StatusLabel.Text = "Ready."
+	self.StatusLabel.TextColor3 = Color.MUTED
+	self.StatusLabel.Font = Enum.Font.Gotham
+	self.StatusLabel.TextSize = 12
+	self.StatusLabel.TextWrapped = true
+	self.StatusLabel.TextXAlignment = Enum.TextXAlignment.Left
+	self.StatusLabel.TextYAlignment = Enum.TextYAlignment.Top
+	self.StatusLabel.Parent = page
+
+	self.SummaryLabel = UIKit.label("No scan run yet.", 12, Color.MUTED, Enum.Font.GothamBold, page)
+	self.SummaryLabel.LayoutOrder = 2
+	self.SummaryLabel.Size = UDim2.new(1, 0, 0, 30)
+	self.SummaryLabel.TextWrapped = true
+
+	UIKit.sectionLabel("Results", page, 3)
+
+	-- Filter tabs: switch which result type is shown without rescanning.
+	self.FilterTabBar = UIKit.row(page, 4, 26)
+	self.FilterButtons = {}
+	local filterOptions = {
+		{Key = "All", Label = "All"},
+		{Key = "CodeMatch", Label = "Code"},
+		{Key = "UIText", Label = "UI Text"},
+		{Key = "Attributes", Label = "Attributes"},
+		{Key = "Tag", Label = "Tags"},
+		{Key = "Recognized", Label = "Recognized"},
+		{Key = "Flagged", Label = "Flagged"},
+	}
+	for _, opt in ipairs(filterOptions) do
+		local btn = UIKit.button("Filter_" .. opt.Key, opt.Label, Color.SURFACE, self.FilterTabBar)
+		btn.Size = UDim2.new(1 / #filterOptions, -3, 1, 0)
+		btn.TextSize = 11
+		btn.MouseButton1Click:Connect(function()
+			self.ActiveFilter = opt.Key
+			self:_refreshResultsUI()
+		end)
+		self.FilterButtons[opt.Key] = btn
+	end
+
+	self.ResultsListFrame = UIKit.scroll(page, Color.SURFACE)
+	self.ResultsListFrame.LayoutOrder = 5
+	self.ResultsListFrame.Size = UDim2.new(1, 0, 0, 240)
+	UIKit.corner(self.ResultsListFrame, 6)
+	UIKit.stroke(self.ResultsListFrame, Color.BORDER)
+	UIKit.padding(self.ResultsListFrame, 4)
+	UIKit.listLayout(self.ResultsListFrame, Enum.FillDirection.Vertical, 4)
+
+	-- Open in Editor sits directly below the results list now.
+	local actRow = UIKit.row(page, 6, 32)
+	self.OpenButton = UIKit.button("OpenScript", "Open in Editor", Color.BLUE_DIM, actRow)
+	self.OpenButton.Size = UDim2.fromScale(1, 1)
+	self.OpenButton.MouseButton1Click:Connect(function() self:_openSelectedScript() end)
+
+	UIKit.sectionLabel("Match Details", page, 7)
+	local pathChip = Instance.new("Frame")
+	pathChip.LayoutOrder = 8
+	pathChip.Size = UDim2.new(1, 0, 0, 34)
+	pathChip.BackgroundColor3 = Color.SURFACE
+	pathChip.BorderSizePixel = 0
+	pathChip.Parent = page
+	UIKit.corner(pathChip, 6)
+	UIKit.stroke(pathChip, Color.BORDER)
+	UIKit.padding(pathChip, 6)
+	self.PathLabel = UIKit.label("No result selected", 12, Color.TEXT, Enum.Font.Code, pathChip)
+	self.PathLabel.Size = UDim2.fromScale(1, 1)
+	self.PathLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+	local metaRow = UIKit.row(page, 9, 26)
+	self.LineLabel = UIKit.label("Line: -", 12, Color.MUTED, Enum.Font.GothamBold, metaRow)
+	self.LineLabel.Size = UDim2.new(0.3, 0, 1, 0)
+	self.KeywordLabel = UIKit.label("Keyword: -", 12, Color.MUTED, Enum.Font.GothamBold, metaRow)
+	self.KeywordLabel.Size = UDim2.new(0.68, 0, 1, 0)
+	self.KeywordLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+	local matchChip = Instance.new("Frame")
+	matchChip.LayoutOrder = 10
+	matchChip.Size = UDim2.new(1, 0, 0, 34)
+	matchChip.BackgroundColor3 = Color3.fromRGB(40, 28, 10)
+	matchChip.BorderSizePixel = 0
+	matchChip.Parent = page
+	UIKit.corner(matchChip, 6)
+	UIKit.stroke(matchChip, Color3.fromRGB(80, 55, 15))
+	UIKit.padding(matchChip, 8)
+	self.MatchLabel = UIKit.label("Match: -", 12, Color.AMBER, Enum.Font.Code, matchChip)
+	self.MatchLabel.Size = UDim2.fromScale(1, 1)
+	self.MatchLabel.TextWrapped = true
+	self.MatchLabel.TextTruncate = Enum.TextTruncate.AtEnd
+
+	UIKit.sectionLabel("Code Preview", page, 11)
+	local previewScroll = UIKit.scroll(page, Color3.fromRGB(10, 12, 18))
+	previewScroll.LayoutOrder = 12
+	previewScroll.Size = UDim2.new(1, 0, 0, 170)
+	UIKit.corner(previewScroll, 6)
+	UIKit.stroke(previewScroll, Color.BORDER)
+	self.PreviewBox = UIKit.codeBox(previewScroll, true)
+	self.PreviewBox.Text = "-- Select a result above to preview code"
+	self.PreviewBox.TextColor3 = Color3.fromRGB(180, 200, 220)
+end
+
+function MainController:_selectRecord(record, rowFrame)
+	if self.SelectedRowFrame then self.SelectedRowFrame.BackgroundColor3 = Color.SURFACE end
+	if rowFrame then
+		rowFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 62)
+		self.SelectedRowFrame = rowFrame
+	end
+	self.SelectedRecord = record
+	local obj = record.ScriptObject
+	local deleted = (obj == nil) or (obj.Parent == nil)
+
+	self.PathLabel.Text = deleted and (record.ScriptPath .. "  [Object deleted]") or record.ScriptPath
+	self.PathLabel.TextColor3 = deleted and Color.RED or Color.TEXT
+	self.LineLabel.Text = "Line: " .. tostring(record.LineNumber)
+	self.KeywordLabel.Text = "Keyword: " .. tostring(record.Keyword)
+	self.MatchLabel.Text = "Match: " .. tostring(record.MatchedText)
+	self.PreviewBox.Text = deleted
+		and "-- This object no longer exists in the game (deleted or moved).\n-- Preview unavailable."
+		or record.PreviewText
+
+	if deleted then
+		self.StatusLabel.Text = "This result's object was deleted or moved — no longer in the game."
+	else
+		self.StatusLabel.Text = ("Selected %s at line %d"):format(obj.Name, record.LineNumber)
+	end
+end
+
+local function isRecordDeleted(record)
+	local obj = record.ScriptObject
+	return (obj == nil) or (obj.Parent == nil)
+end
+
+-- Groups visible records by script/object so a script with many matches
+-- collapses into one row instead of flooding the list. Preserves the
+-- order scripts first appeared in.
+local function groupRecordsByScript(records)
+	local groups, order = {}, {}
+	for _, record in ipairs(records) do
+		local key = record.ScriptPath
+		if not groups[key] then
+			groups[key] = { Path = key, Object = record.ScriptObject, Records = {} }
+			table.insert(order, key)
+		end
+		table.insert(groups[key].Records, record)
+	end
+	local ordered = {}
+	for _, key in ipairs(order) do table.insert(ordered, groups[key]) end
+	return ordered
+end
+
+function MainController:_refreshResultsUI()
+	for _, child in ipairs(self.ResultsListFrame:GetChildren()) do
+		if child:IsA("Frame") or child:IsA("TextLabel") then child:Destroy() end
+	end
+	self.SelectedRowFrame = nil
+	self.SummaryLabel.Text = self.Results:GetSummaryText()
+
+	-- Highlight the active filter tab
+	for key, btn in pairs(self.FilterButtons) do
+		btn.BackgroundColor3 = (key == self.ActiveFilter) and Color.BLUE_DIM or Color.SURFACE
+	end
+
+	local allRecords = self.Results:GetResults()
+	local visibleRecords = {}
+	for _, record in ipairs(allRecords) do
+		if self.ActiveFilter == "All" or record.ResultType == self.ActiveFilter then
+			table.insert(visibleRecords, record)
+		end
+	end
+
+	if #visibleRecords == 0 then
+		local emptyLbl = UIKit.label(
+			(#allRecords == 0) and "No results." or "No results for this filter.",
+			11, Color.MUTED, Enum.Font.Gotham, self.ResultsListFrame)
+		emptyLbl.Size = UDim2.new(1, 0, 0, 24)
+		return
+	end
+
+	local groups = groupRecordsByScript(visibleRecords)
+	local layoutOrder = 0
+
+	for _, group in ipairs(groups) do
+		layoutOrder += 1
+		local deleted = isRecordDeleted({ScriptObject = group.Object})
+		local firstRecord = group.Records[1]
+		local rowColor = deleted and Color.DIM or (Theme.ResultTypeColor[firstRecord.ResultType] or Color.MUTED)
+		local isExpanded = self.ExpandedGroups[group.Path] == true
+		local multipleMatches = #group.Records > 1
+		local isNew = self._pendingHighlight and self._pendingHighlight[group.Path] == true
+
+		local headerHeight = deleted and 44 or 28
+		local header = Instance.new("Frame")
+		header.Name = "GroupHeader" .. layoutOrder
+		header.LayoutOrder = layoutOrder
+		header.Size = UDim2.new(1, 0, 0, headerHeight)
+		header.BackgroundColor3 = isNew and Color3.fromRGB(70, 35, 35) or Color.SURFACE
+		header.BackgroundTransparency = deleted and 0.35 or 0
+		header.BorderSizePixel = 0
+		header.Parent = self.ResultsListFrame
+		UIKit.corner(header, 5)
+
+		local bar = Instance.new("Frame")
+		bar.Size = UDim2.new(0, 3, 1, 0)
+		bar.BackgroundColor3 = rowColor
+		bar.BorderSizePixel = 0
+		bar.Parent = header
+		UIKit.corner(bar, 2)
+
+		local scriptName = group.Object and group.Object.Name or (firstRecord.ScriptPath:match("[^%.]+$") or "Unknown")
+		local countBadge = multipleMatches and ("  ×" .. #group.Records) or ""
+		local expandArrow = multipleMatches and (isExpanded and "[-] " or "[+] ") or "     "
+		local nameLbl = UIKit.label(expandArrow .. scriptName .. countBadge, 12, rowColor, Enum.Font.GothamBold, header)
+		nameLbl.Position = UDim2.new(0, 10, 0, 0)
+		nameLbl.Size = UDim2.new(0.4, -10, 1, 0)
+		nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+		if deleted then
+			nameLbl.Size = UDim2.new(0.4, -10, 0, 16)
+			nameLbl.Position = UDim2.new(0, 10, 0, 4)
+		end
+
+		local typeList = {}
+		local seenTypes = {}
+		for _, r in ipairs(group.Records) do
+			if not seenTypes[r.ResultType] then
+				seenTypes[r.ResultType] = true
+				table.insert(typeList, Theme.SeverityLabel[r.ResultType] or r.ResultType)
+			end
+		end
+		local detailLbl = UIKit.label(table.concat(typeList, ", "), 10, rowColor, Enum.Font.Code, header)
+		detailLbl.TextXAlignment = Enum.TextXAlignment.Left
+		detailLbl.Position = UDim2.new(0.4, 4, 0, 0)
+		detailLbl.Size = UDim2.new(0.6, -12, 1, 0)
+		detailLbl.TextTruncate = Enum.TextTruncate.AtEnd
+		if deleted then
+			detailLbl.Size = UDim2.new(0.6, -12, 0, 16)
+			detailLbl.Position = UDim2.new(0.4, 4, 0, 4)
+		end
+
+		if deleted then
+			local deletedLbl = UIKit.label("Object not found — deleted or moved", 10, Color.RED, Enum.Font.GothamBold, header)
+			deletedLbl.Position = UDim2.new(0, 10, 0, 22)
+			deletedLbl.Size = UDim2.new(1, -16, 0, 14)
+		end
+
+		local clickBtn = Instance.new("TextButton")
+		clickBtn.BackgroundTransparency = 1
+		clickBtn.Text = ""
+		clickBtn.Size = UDim2.fromScale(1, 1)
+		clickBtn.ZIndex = 5
+		clickBtn.Parent = header
+		local DOUBLE_CLICK_WINDOW = 0.35
+		local lastClickTime = 0
+		clickBtn.MouseButton1Click:Connect(function()
+			if self._pendingHighlight and self._pendingHighlight[group.Path] then
+				self._pendingHighlight[group.Path] = nil
+				header.BackgroundColor3 = Color.SURFACE
+			end
+			self:_selectRecord(firstRecord, header)
+			local now = os.clock()
+			if (now - lastClickTime) <= DOUBLE_CLICK_WINDOW then
+				lastClickTime = 0
+				self:_openSelectedScript()
+			else
+				lastClickTime = now
+				if multipleMatches then
+					self.ExpandedGroups[group.Path] = not isExpanded
+					self:_refreshResultsUI()
+				end
+			end
+		end)
+
+		if isExpanded and multipleMatches then
+			for j, record in ipairs(group.Records) do
+				layoutOrder += 1
+				local subRow = Instance.new("Frame")
+				subRow.Name = "SubRow" .. layoutOrder
+				subRow.LayoutOrder = layoutOrder
+				subRow.Size = UDim2.new(1, 0, 0, 30)
+				subRow.BackgroundColor3 = Color3.fromRGB(24, 24, 33)
+				subRow.BorderSizePixel = 0
+				subRow.Parent = self.ResultsListFrame
+				UIKit.corner(subRow, 4)
+
+				local subColor = Theme.ResultTypeColor[record.ResultType] or Color.MUTED
+				local subLbl = UIKit.label(
+					("    Line %d — %s [%s]"):format(record.LineNumber, tostring(record.Keyword), Theme.SeverityLabel[record.ResultType] or record.ResultType),
+					10, subColor, Enum.Font.Code, subRow)
+				subLbl.Position = UDim2.new(0, 8, 0, 0)
+				subLbl.Size = UDim2.new(1, -12, 1, 0)
+				subLbl.TextTruncate = Enum.TextTruncate.AtEnd
+
+				local subClick = Instance.new("TextButton")
+				subClick.BackgroundTransparency = 1
+				subClick.Text = ""
+				subClick.Size = UDim2.fromScale(1, 1)
+				subClick.ZIndex = 5
+				subClick.Parent = subRow
+				local subLastClick = 0
+				subClick.MouseButton1Click:Connect(function()
+					self:_selectRecord(record, subRow)
+					local now = os.clock()
+					if (now - subLastClick) <= DOUBLE_CLICK_WINDOW then
+						subLastClick = 0
+						self:_openSelectedScript()
+					else
+						subLastClick = now
+					end
+				end)
+			end
+		end
+	end
+end
+
+function MainController:_openSelectedScript()
+	if not self.SelectedRecord then self.StatusLabel.Text = "Select a result first." return end
+	local obj = self.SelectedRecord.ScriptObject
+	if not obj or obj.Parent == nil then self.StatusLabel.Text = "Object no longer exists." return end
+	self.Selection:Set({obj})
+	if Utils.isLuaScript(obj) then
+		local ok, err = pcall(function() self.Plugin:OpenScript(obj, self.SelectedRecord.LineNumber) end)
+		self.StatusLabel.Text = ok
+			and ("Opened %s | Line %d"):format(obj.Name, self.SelectedRecord.LineNumber)
+			or ("Could not open script: " .. tostring(err))
+	else
+		self.StatusLabel.Text = ("Selected %s in Explorer"):format(obj:GetFullName())
+	end
+end
+
+----------------------------------------------------------------
+-- NEW-MATCH HIGHLIGHTING (shown directly in the Results tab)
+----------------------------------------------------------------
+
+-- Marks which scripts have a brand-new notifiable match since the last
+-- scan and switches to the Results tab so it's visible immediately. Used
+-- instead of a separate popup — a CoreGui overlay wasn't reliably
+-- rendering text in this environment, so this reuses the widget's own
+-- working UI instead. Rows stay highlighted until clicked.
+function MainController:_flagNewMatches(combined)
+	local currentSignatures = {}
+	local newScriptPaths = {}
+	for _, record in ipairs(combined) do
+		if NOTIFIABLE_RESULT_TYPES[record.ResultType] then
+			local sig = recordSignature(record)
+			currentSignatures[sig] = record
+			if self._hasScannedOnce and not self._notifiedSignatures[sig] then
+				newScriptPaths[record.ScriptPath] = true
+			end
+		end
+	end
+
+	if next(newScriptPaths) then
+		self._pendingHighlight = self._pendingHighlight or {}
+		for path in pairs(newScriptPaths) do
+			self._pendingHighlight[path] = true
+		end
+		self:ShowTab("Results")
+	end
+
+	self._notifiedSignatures = currentSignatures
+	self._hasScannedOnce = true
+end
+----------------------------------------------------------------
+-- AUTO SCAN (runs on open + interval, no manual controls)
+----------------------------------------------------------------
+
+function MainController:RunAutoScan()
+	if self.IsScanning then return end
+	self.IsScanning = true
+	self.StatusLabel.Text = "Scanning..."
+	task.wait()
+
+	-- Run keyword/UI-text scan (this already covers TextLabel/TextButton/
+	-- TextBox text via isTextUIObject), plus Attributes and Tags, and
+	-- merge everything into one combined result set.
+	-- Use the merged keyword set from every profile currently selected for
+	-- scanning (multi-select), not just the single edit-target profile.
+	local keywords = self.KeywordLibrary:GetKeywordsForSelectedProfiles()
+	local combined = {}
+	local scannedTotal, foundTotal = 0, 0
+
+	local allResults, _, allScanned, allFound = self.ScanEngine:ScanAll(keywords)
+	for _, r in ipairs(allResults or {}) do table.insert(combined, r) end
+	scannedTotal += allScanned or 0
+	foundTotal += allFound or 0
+
+	local attrResults, _, attrScanned, attrFound = self.ScanEngine:ScanAttributes()
+	for _, r in ipairs(attrResults or {}) do table.insert(combined, r) end
+	scannedTotal += attrScanned or 0
+	foundTotal += attrFound or 0
+
+	local tagResults, _, tagScanned, tagFound = self.ScanEngine:ScanTags()
+	for _, r in ipairs(tagResults or {}) do table.insert(combined, r) end
+	scannedTotal += tagScanned or 0
+	foundTotal += tagFound or 0
+
+	-- High-confidence signatures are bundled in the plugin and require no
+	-- companion program, HTTP access, or Rojo connection.
+	local signatureResults, _, signatureScanned, signatureFound = SignatureMatcher.ScanAll(self.OwnScript)
+	for _, r in ipairs(signatureResults or {}) do table.insert(combined, r) end
+	scannedTotal += signatureScanned or 0
+	foundTotal += signatureFound or 0
+
+	self:_flagNewMatches(combined)
+	self.Results:SetResults(combined)
+	local selectedProfiles = self.KeywordLibrary:GetSelectedProfileNames()
+	local profileLabel = table.concat(selectedProfiles, ", ")
+	self.StatusLabel.Text = ("Done. Profiles: %s | Scanned: %d | Found: %d (code/text + attributes + tags)"):format(profileLabel, scannedTotal, foundTotal)
+	self:_refreshResultsUI()
+	self.IsScanning = false
+end
+
+----------------------------------------------------------------
+-- TOOLBAR + STARTUP
+----------------------------------------------------------------
+
+function MainController:Init()
+	local toolbar = self.Plugin:CreateToolbar("Malicious Finder")
+	local toggleButton = toolbar:CreateButton(
+		"Malicious Finder",
+		"Scans scripts for suspicious keywords and patterns",
+		"rbxassetid://4458901886"
+	)
+	toggleButton.ClickableWhenViewportHidden = true
+
+	self:_buildShell()
+	self:_buildResultsPage()
+	self:_buildKeywordsTab()
+	self:_buildSendInfoTab()
+	self:_buildSyncTab()
+	self:ShowTab("Results")
+
+	toggleButton.Click:Connect(function()
+		self.Widget.Enabled = not self.Widget.Enabled
+	end)
+	self.Widget.Enabled = true
+
+	task.spawn(function()
+		local remoteUrl = self.KeywordLibrary:GetRemoteUrl()
+		if remoteUrl ~= "" then
+			self.StatusLabel.Text = "Syncing remote keywords..."
+			self.KeywordLibrary:SyncRemote(remoteUrl)
+		end
+		self.StatusLabel.Text = "Scanning..."
+		task.wait(0.5)
+		self:RunAutoScan()
+	end)
+
+	self:_wireLiveRescan()
+end
+
+-- Rescans whenever anything is added to or removed from any real content
+-- directory in the game (Workspace, ServerScriptService, ServerStorage,
+-- ReplicatedStorage, StarterGui, StarterPlayer, Lighting, SoundService),
+-- instead of polling on a timer. Deliberately does NOT listen on CoreGui
+-- or the whole `game` tree — Studio's own editor internals (selection
+-- highlights, drag adornments, hover outlines) live under CoreGui and
+-- fire constant Added/Removing events that have nothing to do with the
+-- actual place content, which is what caused continuous rescanning.
+-- Rapid bursts of changes (e.g. inserting a model with many parts) are
+-- debounced into a single rescan shortly after things settle.
+function MainController:_scheduleRescan()
+	if self._pendingRescan then return end
+	self._pendingRescan = true
+	local DEBOUNCE_SECONDS = 0.75
+	task.delay(DEBOUNCE_SECONDS, function()
+		self._pendingRescan = false
+		if self.Widget.Parent ~= nil and not self.IsScanning then
+			-- Something was added — re-sync keywords from the Google Sheet
+			-- (if a remote URL is configured) before rescanning, so newly
+			-- added rows on the sheet are picked up too.
+			local remoteUrl = self.KeywordLibrary:GetRemoteUrl()
+			if remoteUrl ~= "" then
+				self.KeywordLibrary:SyncRemote(remoteUrl)
+			end
+			self:RunAutoScan()
+		end
+	end)
+end
+
+-- Connects a Source-property listener to every script we haven't already
+-- attached to, so EDITING an existing script's code (not just adding/
+-- removing instances) also triggers a rescan. Safe to call repeatedly —
+-- already-tracked scripts are skipped.
+-- Wires a Source-change listener onto a SINGLE script object. O(1) —
+-- safe to call once per newly-added script (e.g. from DescendantAdded)
+-- without re-walking the whole place. Fixes a crash/freeze that occurred
+-- when importing large assets: the old code called the full-tree
+-- _wireSourceChangeListeners() once per new script during import, which
+-- was an O(n^2) blowup (n = place size x new script count) and froze or
+-- crashed Studio on big asset imports.
+function MainController:_wireSingleScriptListener(obj)
+	self._trackedScripts = self._trackedScripts or {}
+	if self._trackedScripts[obj] or obj:IsDescendantOf(self.Widget) then
+		return
+	end
+	self._trackedScripts[obj] = true
+	local ok, conn = pcall(function()
+		return obj:GetPropertyChangedSignal("Source"):Connect(function()
+			self:_scheduleRescan()
+		end)
+	end)
+	if ok and conn then
+		obj.AncestryChanged:Connect(function(_, parent)
+			if parent == nil then
+				conn:Disconnect()
+				self._trackedScripts[obj] = nil
+			end
+		end)
+	end
+end
+
+-- One-time full-tree pass (startup only) to wire listeners onto every
+-- script that already exists. Yields periodically so a very large
+-- existing place doesn't stall Studio on the initial pass either.
+function MainController:_wireSourceChangeListeners()
+	self._trackedScripts = self._trackedScripts or {}
+	local processed = 0
+	for _, obj in ipairs(game:GetDescendants()) do
+		if Utils.isLuaScript(obj) then
+			self:_wireSingleScriptListener(obj)
+		end
+		processed += 1
+		if processed % 150 == 0 then
+			task.wait()
+		end
+	end
+end
+
+function MainController:_wireLiveRescan()
+	local WATCHED_SERVICES = {
+		"Workspace", "ServerScriptService", "ServerStorage", "ReplicatedStorage",
+		"StarterGui", "StarterPlayer", "Lighting", "SoundService",
+	}
+
+	for _, serviceName in ipairs(WATCHED_SERVICES) do
+		local ok, service = pcall(game.GetService, game, serviceName)
+		if ok and service then
+			service.DescendantAdded:Connect(function(obj)
+				if obj:IsDescendantOf(self.Widget) then return end
+				self:_scheduleRescan()
+				-- Newly added scripts need their own Source listener too.
+				-- Wired directly onto this one object (O(1)) instead of
+				-- re-walking the whole place -- see _wireSingleScriptListener.
+				if Utils.isLuaScript(obj) then
+					self:_wireSingleScriptListener(obj)
+				end
+			end)
+			service.DescendantRemoving:Connect(function(obj)
+				if obj:IsDescendantOf(self.Widget) then return end
+				self:_scheduleRescan()
+			end)
+		end
+	end
+
+	-- Attach Source-change listeners to every script that already exists.
+	self:_wireSourceChangeListeners()
+end
+
+return MainController
+]]></ProtectedString>
+					<string name="ScriptGuid">{099052D5-86F6-4B43-89BB-7D8AE7C99702}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">MainController</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX84FF90FD4D604B58AC61CB2CF3645BA0">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- AssetSyncEngine: polls the local HE-Hub companion app and rebuilds synced
+-- assets in Workspace. Originally its own standalone plugin (AssetSync);
+-- now a module consumed by HE-Utilities' MainController so both tools
+-- live under one toolbar/widget. Exposes Start(callbacks) where callbacks
+-- is { OnStatusChange, OnDetailChange, OnScanChange } -- MainController
+-- wires these to the Sync tab's labels.
+local HttpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
+
+local ScanEngine = require(script.Parent.ScopedScanEngine)
+
+local SERVER_URL = "http://127.0.0.1:34877"
+local POLL_INTERVAL = 2 -- seconds
+local CONTAINER_NAME = "SyncedAssets"
+
+local ENUM_PROPERTY_MAP = {
+	Shape = Enum.PartType,
+	Material = Enum.Material,
+	BackSurface = Enum.SurfaceType,
+	BottomSurface = Enum.SurfaceType,
+	FrontSurface = Enum.SurfaceType,
+	LeftSurface = Enum.SurfaceType,
+	RightSurface = Enum.SurfaceType,
+	TopSurface = Enum.SurfaceType,
+	TextXAlignment = Enum.TextXAlignment,
+	TextYAlignment = Enum.TextYAlignment,
+	HorizontalAlignment = Enum.HorizontalAlignment,
+	VerticalAlignment = Enum.VerticalAlignment,
+	ScaleType = Enum.ScaleType,
+	SizeConstraint = Enum.SizeConstraint,
+	AutomaticSize = Enum.AutomaticSize,
+}
+
+local AssetSyncEngine = {}
+AssetSyncEngine.__index = AssetSyncEngine
+
+function AssetSyncEngine.new()
+	local self = setmetatable({}, AssetSyncEngine)
+	self.Enabled = true
+	self.LastVersion = -1
+	self.LastNotifiedError = nil
+	self.Callbacks = { OnStatusChange = nil, OnDetailChange = nil, OnScanChange = nil, OnRemovalChange = nil }
+	self.SuppressRemoval = false
+	self.RemovalConnection = nil
+	return self
+end
+
+local function notify(text)
+	local ok = pcall(function()
+		StarterGui:SetCore("SendNotification", { Title = "Asset Sync", Text = text, Duration = 4 })
+	end)
+	if not ok then
+		print("[AssetSync] " .. text)
+	end
+end
+
+local function getContainer()
+	local container = Workspace:FindFirstChild(CONTAINER_NAME)
+	if not container then
+		container = Instance.new("Folder")
+		container.Name = CONTAINER_NAME
+		container.Parent = Workspace
+	end
+	return container
+end
+
+local function clearContainer()
+	local container = getContainer()
+	for _, child in ipairs(container:GetChildren()) do
+		child:Destroy()
+	end
+end
+
+local function urlEncodeFilename(name)
+	return (name:gsub("[^%w%-%.%_%~]", function(c)
+		return string.format("%%%02X", string.byte(c))
+	end))
+end
+
+local function enumItemFromToken(enumType, token)
+	for _, item in ipairs(enumType:GetEnumItems()) do
+		if item.Value == token then
+			return item
+		end
+	end
+	return nil
+end
+
+local function setProperty(instance, name, propData)
+	local ptype = propData.type
+	local value = propData.value
+
+	if ptype == "string" or ptype == "bool" or ptype == "number" then
+		instance[name] = value
+	elseif ptype == "Content" then
+		instance[name] = value
+	elseif ptype == "Vector3" then
+		instance[name] = Vector3.new(value.x, value.y, value.z)
+	elseif ptype == "Vector2" then
+		instance[name] = Vector2.new(value.x, value.y)
+	elseif ptype == "Color3" then
+		instance[name] = Color3.new(value.r, value.g, value.b)
+	elseif ptype == "Color3uint8" then
+		instance[name] = Color3.fromRGB(value.r, value.g, value.b)
+	elseif ptype == "CFrame" then
+		instance[name] = CFrame.new(
+			value.x, value.y, value.z,
+			value.r00, value.r01, value.r02,
+			value.r10, value.r11, value.r12,
+			value.r20, value.r21, value.r22
+		)
+	elseif ptype == "UDim" then
+		instance[name] = UDim.new(value.s, value.o)
+	elseif ptype == "UDim2" then
+		instance[name] = UDim2.new(value.xs, value.xo, value.ys, value.yo)
+	elseif ptype == "token" then
+		local enumType = ENUM_PROPERTY_MAP[name]
+		if enumType then
+			local item = enumItemFromToken(enumType, value)
+			if item then
+				instance[name] = item
+			end
+		end
+	end
+end
+
+local function buildTree(node, referentMap, pendingRefs)
+	if not node or not node.class then
+		return nil
+	end
+
+	local ok, instance = pcall(Instance.new, node.class)
+	if not ok or not instance then
+		warn("[AssetSync] Could not create instance of class " .. tostring(node.class) .. ": " .. tostring(instance))
+		return nil
+	end
+
+	if node.referent then
+		referentMap[node.referent] = instance
+	end
+
+	for name, propData in pairs(node.properties or {}) do
+		if propData.type == "Ref" then
+			if propData.value then
+				table.insert(pendingRefs, { instance = instance, name = name, referent = propData.value })
+			end
+		else
+			local setOk, setErr = pcall(setProperty, instance, name, propData)
+			if not setOk then
+				warn("[AssetSync] Could not set " .. tostring(node.class) .. "." .. tostring(name) .. ": " .. tostring(setErr))
+			end
+		end
+	end
+
+	for _, childNode in ipairs(node.children or {}) do
+		local child = buildTree(childNode, referentMap, pendingRefs)
+		if child then
+			child.Parent = instance
+		end
+	end
+
+	return instance
+end
+
+local function loadAssetTree(filename)
+	local url = SERVER_URL .. "/asset-tree/" .. urlEncodeFilename(filename)
+	local ok, response = pcall(function()
+		return HttpService:RequestAsync({ Url = url, Method = "GET" })
+	end)
+	if not ok or not response then
+		warn("[AssetSync] Failed to reach HE-Hub for asset tree: " .. tostring(response))
+		return nil
+	end
+
+	local decodeOk, body = pcall(function()
+		return HttpService:JSONDecode(response.Body)
+	end)
+	if not decodeOk or type(body) ~= "table" then
+		warn("[AssetSync] Failed to decode asset-tree response for " .. filename)
+		return nil
+	end
+
+	if not response.Success then
+		warn("[AssetSync] HE-Hub could not provide asset tree for " .. filename .. ": " .. tostring(body.error))
+		return nil
+	end
+
+	return body.roots
+end
+
+function AssetSyncEngine:_fireDetail(text, isError)
+	if self.Callbacks.OnDetailChange then
+		self.Callbacks.OnDetailChange(text, isError)
+	end
+end
+
+function AssetSyncEngine:_fireScan(text, hadIssues)
+	if self.Callbacks.OnScanChange then
+		self.Callbacks.OnScanChange(text, hadIssues)
+	end
+end
+
+function AssetSyncEngine:_fireStatus()
+	if self.Callbacks.OnStatusChange then
+		self.Callbacks.OnStatusChange(self.Enabled)
+	end
+end
+
+function AssetSyncEngine:_fireRemoval(obj)
+	local path = obj:GetFullName()
+	local text = ("%s removed at %s"):format(obj.Name, os.date("%X"))
+	notify("Synced item removed: " .. obj.Name)
+	warn("[AssetSync] Descendant of synced assets was removed: " .. path)
+	if self.Callbacks.OnRemovalChange then
+		self.Callbacks.OnRemovalChange(text, true)
+	end
+end
+
+-- Watches the synced container for anything being deleted or moved out of
+-- it AFTER a sync completes (someone deleting a part in Explorer, a script
+-- destroying it at runtime, etc). Deliberately does NOT fire for our own
+-- clearContainer() wipes ahead of a fresh sync -- those are suppressed via
+-- self.SuppressRemoval, which is set around the clear and released with
+-- task.defer so it stays true through any deferred-signal removal events
+-- from that same clear.
+function AssetSyncEngine:_wireRemovalWatcher(container)
+	if self.RemovalConnection then
+		self.RemovalConnection:Disconnect()
+		self.RemovalConnection = nil
+	end
+	self.RemovalConnection = container.DescendantRemoving:Connect(function(obj)
+		if self.SuppressRemoval then
+			return
+		end
+		self:_fireRemoval(obj)
+	end)
+end
+
+function AssetSyncEngine:_scanSyncedContainer(container)
+	local ok, results = pcall(ScanEngine.ScanContainer, container)
+	if not ok then
+		warn("[AssetSync] Scan failed: " .. tostring(results))
+		self:_fireScan("scan failed", true)
+		return
+	end
+
+	if #results == 0 then
+		self:_fireScan("no issues found", false)
+	else
+		self:_fireScan(#results .. " issue(s) found", true)
+		for _, r in ipairs(results) do
+			warn("[AssetSync][Scan] " .. r.Type .. " match (" .. r.Count .. "x) in " .. r.Object:GetFullName())
+		end
+	end
+end
+
+function AssetSyncEngine:_syncFromStatus(data)
+	self.SuppressRemoval = true
+	clearContainer()
+	task.defer(function()
+		self.SuppressRemoval = false
+	end)
+	if not data.exists then
+		return
+	end
+
+	local roots = loadAssetTree(data.filename)
+	if not roots or #roots == 0 then
+		notify("Failed to load asset: " .. tostring(data.filename))
+		self:_fireDetail("failed to load " .. tostring(data.filename), true)
+		return
+	end
+
+	local referentMap = {}
+	local pendingRefs = {}
+	local container = getContainer()
+	self:_wireRemovalWatcher(container)
+
+	for _, rootNode in ipairs(roots) do
+		local instance = buildTree(rootNode, referentMap, pendingRefs)
+		if instance then
+			instance.Parent = container
+		end
+	end
+
+	for _, ref in ipairs(pendingRefs) do
+		local target = referentMap[ref.referent]
+		if target then
+			local resolveOk, resolveErr = pcall(function()
+				ref.instance[ref.name] = target
+			end)
+			if not resolveOk then
+				warn("[AssetSync] Could not resolve ref " .. ref.name .. ": " .. tostring(resolveErr))
+			end
+		end
+	end
+
+	notify("Loaded asset: " .. tostring(data.filename))
+	self:_fireDetail("Last sync: " .. os.date("%X"), false)
+
+	self:_scanSyncedContainer(container)
+end
+
+function AssetSyncEngine:_pollOnce()
+	local HttpEnabled = HttpService.HttpEnabled
+	if not HttpEnabled then
+		if self.LastNotifiedError ~= "http" then
+			warn("[AssetSync] HTTP requests are disabled. Enable them in Game Settings > Security.")
+			self.LastNotifiedError = "http"
+			self:_fireDetail("HTTP requests disabled", true)
+		end
+		return
+	end
+
+	local ok, response = pcall(function()
+		return HttpService:RequestAsync({ Url = SERVER_URL .. "/status", Method = "GET" })
+	end)
+	if not ok or not response or not response.Success then
+		return
+	end
+	self.LastNotifiedError = nil
+
+	local decodeOk, data = pcall(function()
+		return HttpService:JSONDecode(response.Body)
+	end)
+	if not decodeOk or type(data) ~= "table" then
+		return
+	end
+
+	if data.version ~= self.LastVersion then
+		self.LastVersion = data.version
+		self:_syncFromStatus(data)
+	end
+end
+
+function AssetSyncEngine:SetEnabled(enabled)
+	self.Enabled = enabled
+	self:_fireStatus()
+end
+
+function AssetSyncEngine:Start(callbacks)
+	self.Callbacks = callbacks or {}
+	self:_fireStatus()
+	self:_fireDetail("No syncs yet", false)
+	self:_fireScan("No scans yet", false)
+	if self.Callbacks.OnRemovalChange then
+		self.Callbacks.OnRemovalChange("No removals detected", false)
+	end
+	self:_wireRemovalWatcher(getContainer())
+
+	task.spawn(function()
+		while true do
+			if self.Enabled then
+				local ok, err = pcall(function() self:_pollOnce() end)
+				if not ok then
+					warn("[AssetSync] Poll error: " .. tostring(err))
+				end
+			end
+			task.wait(POLL_INTERVAL)
+		end
+	end)
+end
+
+return AssetSyncEngine
+]]></ProtectedString>
+					<string name="ScriptGuid">{D443CDF0-D878-44F0-B9B0-D50170C1F7DC}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">AssetSyncEngine</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX4B8F3D70AAE74D20A5F2038A712CB701">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- SignatureMatcher: high-confidence local signature matching.
+-- This module is intentionally standalone: it does not use HttpService,
+-- Rojo, or the HE-Hub companion application. Broad keywords belong in the
+-- CodeMatch scanner; only distinctive signatures belong here as Flagged.
+local Utils = require(script.Parent.Utils)
+
+local SignatureMatcher = {}
+
+local RULES = {
+	{Id = "he-asset-marker", Name = "HE asset marker", ResultType = "Recognized", Mode = "plain", Value = "-- HE-ASSET-ID:"},
+	{Id = "textureconfiguration-module-line", Name = "TextureConfiguration module import", ResultType = "CodeMatch", Mode = "line", Value = 'local TextureConfiguration = require(script:WaitForChild("TextureConfiguration"))'},
+	{Id = "numeric-asset-require", Name = "Numeric asset require", ResultType = "Flagged", Mode = "pattern", Value = "require%s*%(%s*%d%d%d%d%d+%s*%)"},
+	{Id = "pluginmanager-getfenv", Name = "getfenv PluginManager bootstrap", ResultType = "Flagged", Mode = "pattern", Value = "getfenv%s*%(%)%s*%.%s*PluginManager"},
+	{Id = "reversed-global-access", Name = "Reversed dynamic global access", ResultType = "Flagged", Mode = "pattern", Value = "getfenv%s*%(%)%s*%[%s*string%.reverse%s*%("},
+	{Id = "reversed-char-table", Name = "Reversed character-table string", ResultType = "Flagged", Mode = "pattern", Value = "string%.reverse%s*%(%s*table%.concat%s*%("},
+	{Id = "hidden-comment-code", Name = "Code hidden between comment delimiters", ResultType = "Flagged", Mode = "pattern", Value = "%]%]%s*%S.-%-%-%[%["},
+	{Id = "reversed-kick", Name = "Reversed kick action", ResultType = "Flagged", Mode = "plain", Value = 'local Version = "kcik"'},
+	{Id = "reversed-error-501", Name = "Reversed Error 501 message", ResultType = "Flagged", Mode = "plain", Value = "105 rorrE"},
+	{Id = "missing-relative", Name = "Fake missing-relative error", ResultType = "Flagged", Mode = "plain", Value = "ERR_MISSING_RELATIVE"},
+	{Id = "core-meta-module", Name = "Core meta module asset link", ResultType = "Flagged", Mode = "plain", Value = "Roblox-Core-Meta-Module"},
+	{Id = "preset-hash-comment", Name = "Preset hash injection marker", ResultType = "Flagged", Mode = "plain", Value = "my hash dont change"},
+	{Id = "hellnaw-gate", Name = "Known loader wait gate", ResultType = "Flagged", Mode = "plain", Value = "repeat wait() until not hellnaw()"},
+	{Id = "rosync-loader", Name = "Obfuscated RoSync loader", ResultType = "Flagged", Mode = "plain", Value = "RoSync Loader ]]"},
+	{Id = "command-bar-social-engineering", Name = "Command-bar paste social engineering", ResultType = "Flagged", Mode = "plain", Value = "paste this hash"},
+	{Id = "easyconfiguration-hierarchy-loader", Name = "EasyConfiguration hierarchy loader", ResultType = "Flagged", Mode = "line", Value = 'local EasyConfiguration = require(script:WaitForChild("EasyConfiguration",5).Hierarchy.Value)'},
+	{Id = "textureconfiguration-attribute-loader", Name = "TextureConfiguration attribute loader", ResultType = "Flagged", Mode = "line", Value = 'local TextureConfiguration = require(script:WaitForChild("TextureConfiguration", 4):GetAttribute("Version"))'},
+	{Id = "lightsystem-pose-loader", Name = "LightSystemConfiguration pose loader", ResultType = "Flagged", Mode = "line", Value = 'local LightSystemConfiguration = require(script:WaitForChild("Pose", 2).Value)'},
+	{Id = "textureconfiguration-pose-loader", Name = "TextureConfiguration pose loader", ResultType = "Flagged", Mode = "line", Value = 'local TextureConfiguration = require(script:WaitForChild("Pose", 6).Value)'},
+	{Id = "textureconfiguration-configuration-attribute", Name = "Configuration attribute loader", ResultType = "Flagged", Mode = "line", Value = 'local TextureConfiguration = require(script:WaitForChild("Configuration", 4):GetAttribute("Version"))'},
+	{Id = "textureconfiguration-print-disguise", Name = "TextureConfiguration print disguise", ResultType = "Flagged", Mode = "line", Value = 'local TextureConfiguration = print(RootModel, RootModel.Parent, "TextureConfiguration", require(script:WaitForChild("Pose", 6)[\'Value\']), pcall(function() RootModel.Parent:WaitForChild("AssetParent") end), ConfigurationCache)'},
+	{Id = "automaticmodel-attributes", Name = "AutomaticModel attribute loader", ResultType = "Flagged", Mode = "line", Value = "local Attributes = GetChildrenAttributes({script.Parent:WaitForChild('AutomaticModel')})"},
+	{Id = "sync-value-loader", Name = "Sync ObjectValue loader", ResultType = "Flagged", Mode = "plain", Value = 'script:WaitForChild("Sync", 4).Value'},
+	{Id = "pose-value-loader", Name = "Pose ObjectValue loader", ResultType = "Flagged", Mode = "plain", Value = 'script:WaitForChild("Pose", 4).Value'},
+	{Id = "nested-textureconfiguration-loader", Name = "Nested TextureConfiguration loader", ResultType = "Flagged", Mode = "line", Value = 'local TextureConfiguration = require(script:WaitForChild("TextureConfiguration").Texture.Extras.RigidConstraint.Light.Value)'},
+	{Id = "type-library-import", Name = "Type library module import", ResultType = "CodeMatch", Mode = "line", Value = "local TypeLibrary = require(script:WaitForChild('Type'))"},
+	{Id = "easyconfiguration-pose-loader", Name = "EasyConfiguration pose loader", ResultType = "Flagged", Mode = "line", Value = 'local EasyConfiguration = require(script:WaitForChild("EasyConfiguration",5).Pose.Value)'},
+	{Id = "textureconfiguration-module-value", Name = "TextureConfiguration ModuleValue loader", ResultType = "Flagged", Mode = "line", Value = 'local TextureConfiguration = require(script:WaitForChild("TextureConfiguration", 4).Module.Value)'},
+	{Id = "tag-validation-self-destroy", Name = "Tag validation self-destruction", ResultType = "Flagged", Mode = "all", Values = {"descendant:GetTags()[1] == validation", "instance.Parent:Destroy()"}},
+	{Id = "legacy-waitforchild-helper", Name = "Legacy custom WaitForChild helper", ResultType = "CodeMatch", Mode = "all", Values = {"local function WaitForChild(Parent, Name, TimeLimit)", "Infinite yield possible for WaitForChild("}},
+	{Id = "spelled-require", Name = "Obfuscated spelled-out require", ResultType = "Flagged", Mode = "plain", Value = '("%s%s%s%s%s%s%s"):format("r","e","q","u","i","r","e")'},
+	{Id = "findfirstchild-create-loader", Name = "FindFirstChild Create loader", ResultType = "Flagged", Mode = "line", Value = "local Create = require(script:FindFirstChild('Create'))"},
+	{Id = "async-self-destroy", Name = "Async marker self-destruction", ResultType = "Flagged", Mode = "all", Values = {'FindFirstChild("Async", true)', "script:Destroy()", "ERR_MISSING_RELATIVE"}},
+	{Id = "reference-value-loader", Name = "Reference ObjectValue loader", ResultType = "Flagged", Mode = "line", Value = "local TextureConfiguration = require(PoseReference.Value)"},
+	{Id = "studio-gated-loader", Name = "Studio-gated loader", ResultType = "Flagged", Mode = "all", Values = {"UserSettings().GameSettings:InStudioMode()", "repeat wait() until not hellnaw()"}},
+	{Id = "purchase-prompt-loop", Name = "Purchase prompt spam loop", ResultType = "Flagged", Mode = "all", Values = {"while wait(0.1) do", "PromptProductPurchase(player, randomProduct)", "player.UserId ~= game.CreatorId"}},
+	{Id = "invalid-on-equipped-require", Name = "Obfuscated onEquipped require", ResultType = "Flagged", Mode = "line", Value = "require(onEquipped-0)"},
+	{Id = "animationthread-loader", Name = "AnimationThread guarded loader", ResultType = "Flagged", Mode = "line", Value = "local Thread = AnimationThread(game) and require(script.Animation)"},
+	{Id = "calco-character-array", Name = "Known calco character array", ResultType = "Flagged", Mode = "plain", Value = 'calco = {"s","c","q","t","o","a","i","f","g","w","8","e","m","7","h","n"}'},
+	{Id = "pluginmanager-runservice-run", Name = "PluginManager play-solo bootstrap", ResultType = "Flagged", Mode = "all", Values = {"local pluginManager = PluginManager()", 'game:GetService("RunService"):Run()'}},
+	{Id = "asset-inventory-loadout", Name = "Asset inventory Loadout prompt", ResultType = "Flagged", Mode = "all", Values = {"You must have the following Asset IDs in your Roblox inventory", "Loadout.Obtain("}},
+	{Id = "stys-asset-loader", Name = "Stys numeric asset loader", ResultType = "Flagged", Mode = "pattern", Value = "require%s*%(%s*%d%d%d%d%d+%s*%)%s*:%s*Stys%s*%(%)"},
+	{Id = "fake-error-textbox-handler", Name = "Fake-error recovery textbox handler", ResultType = "Flagged", Mode = "all", Values = {"local function handleNoCore()", "script.Script.Value.Script.Value", "createTextBoxForPlayer(player)"}},
+	{Id = "decoy-require-and", Name = "Decoy string require expression", ResultType = "Flagged", Mode = "line", Value = 'local Builder = require("./Objects" and md) :: (Content) -> {CFrame | Vector3 | Part}'},
+	{Id = "getlastmodel-fallback", Name = "GetLastModel fallback", ResultType = "Flagged", Mode = "line", Value = "local Model = GetLastModel(script) or script.Parent"},
+	{Id = "script-shadow-table", Name = "Script global shadowing", ResultType = "Flagged", Mode = "line", Value = "local script = {}"},
+	{Id = "configurations-import", Name = "Configurations module import", ResultType = "CodeMatch", Mode = "line", Value = "local Config = require(script.Configurations)"},
+	{Id = "optimization-hash-injection", Name = "Optimization hash injection", ResultType = "Flagged", Mode = "all", Values = {"local function optimizationnaa(str)", "local PresetHash =", "local OptimNumber = optimizationnaa(PresetHash) or 0"}},
+	{Id = "reversed-action-dispatch", Name = "Reversed action player dispatch", ResultType = "Flagged", Mode = "all", Values = {'local Version = "kcik"', "local Action = Version:reverse()", "player[Action](player, message)"}},
+	{Id = "core-important-action-handler", Name = "CORE IMPORTANT action handler", ResultType = "Flagged", Mode = "all", Values = {'FindFirstChild("CORE (IMPORTANT)")', 'script:GetAttribute("Action")', "player[Action](player, message)"}},
+	{Id = "humanoid-hash-injection", Name = "Humanoid description hash injection", ResultType = "Flagged", Mode = "all", Values = {"desc.RightArm = OptimNumber", "Enum.AssetTypeVerification.ClientOnly", "player:LoadCharacter()"}},
+	{Id = "ungroup-kick-message", Name = "Ungroup Core Groups kick message", ResultType = "Flagged", Mode = "all", Values = {"p:Kick(", "ungroup all Core Groups with Ctrl+Shift+U"}},
+	{Id = "error401-important-assets", Name = "Error 401 ImportantAssets message", ResultType = "Flagged", Mode = "all", Values = {"Error: 401", 'FindFirstChild("ImportantAssets", true)'}},
+	{Id = "coremetamock-error", Name = "CoreMetaMock fake module error", ResultType = "Flagged", Mode = "all", Values = {'FindFirstChild("CoreMetaMock",true)', "Unable to save userdata", "string.reverse(table.concat"}},
+	{Id = "dynamic-purchase-action", Name = "Dynamic purchase action loop", ResultType = "Flagged", Mode = "all", Values = {"GenerateKey(id)", "ProcessInput(id)", "CacheInput(key, data)", 'game:GetService("MarketplaceService")', "inputService[action](inputService"}},
+}
+
+local function isOwnObject(obj, ownScript)
+	local root = ownScript and ownScript.Parent
+	if obj == ownScript then return true end
+	if root and (obj == root or obj:IsDescendantOf(root)) then return true end
+	local devFolder = game:GetService("ServerStorage"):FindFirstChild("HE-Utilities")
+	if devFolder and (obj == devFolder or obj:IsDescendantOf(devFolder)) then return true end
+	local pluginGuiService = game:GetService("PluginGuiService")
+	return obj:IsDescendantOf(pluginGuiService)
+end
+
+local function makeRecord(obj, source, rule, matchInfo)
+	local lineNumber = Utils.getLineNumberFromIndex(source, matchInfo.StartIndex)
+	return {
+		ScriptObject = obj,
+		ScriptPath = obj:GetFullName(),
+		Keyword = rule.Name,
+		MatchedText = matchInfo.MatchText,
+		LineNumber = lineNumber,
+		ResultType = rule.ResultType,
+		PreviewText = Utils.buildPreview(source, lineNumber, 3),
+		SignatureId = rule.Id,
+	}
+end
+
+function SignatureMatcher.ScanSource(obj, source)
+	local results = {}
+	for _, rule in ipairs(RULES) do
+		local matches
+		if rule.Mode == "all" then
+			matches = {}
+			local lowerSource = source:lower()
+			local allPresent = true
+			for _, value in ipairs(rule.Values) do
+				if not lowerSource:find(value:lower(), 1, true) then
+					allPresent = false
+					break
+				end
+			end
+			if allPresent then
+				local firstMatches = Utils.scanPlainDetailed(source, rule.Values[1], false)
+				if firstMatches[1] then table.insert(matches, firstMatches[1]) end
+			end
+		elseif rule.Mode == "line" then
+			matches = {}
+			local position = 1
+			for line in (source .. "\n"):gmatch("(.-)\n") do
+				local leading = line:match("^%s*()") or 1
+				local trimmed = line:match("^%s*(.-)%s*$") or line
+				if trimmed == rule.Value then
+					table.insert(matches, {
+						StartIndex = position + leading - 1,
+						EndIndex = position + leading + #trimmed - 2,
+						MatchText = trimmed,
+					})
+				end
+				position += #line + 1
+			end
+		elseif rule.Mode == "pattern" then
+			local valid
+			matches, valid = Utils.scanPatternDetailed(source, rule.Value)
+			if not valid then matches = {} end
+		else
+			matches = Utils.scanPlainDetailed(source, rule.Value, false)
+		end
+		for _, matchInfo in ipairs(matches) do
+			table.insert(results, makeRecord(obj, source, rule, matchInfo))
+		end
+	end
+	return results
+end
+
+function SignatureMatcher.ScanAll(ownScript)
+	local results = {}
+	local scannedCount = 0
+	for _, obj in ipairs(game:GetDescendants()) do
+		if Utils.isLuaScript(obj) and not isOwnObject(obj, ownScript) then
+			local ok, source = pcall(function() return obj.Source end)
+			if ok and type(source) == "string" then
+				scannedCount += 1
+				for _, record in ipairs(SignatureMatcher.ScanSource(obj, source)) do
+					table.insert(results, record)
+				end
+				if scannedCount % 150 == 0 then task.wait() end
+			end
+		end
+	end
+	return results, ("Local signatures: scanned %d | found %d"):format(scannedCount, #results), scannedCount, #results
+end
+
+function SignatureMatcher.GetRuleCount()
+	return #RULES
+end
+
+return SignatureMatcher
+]]></ProtectedString>
+					<string name="ScriptGuid">{4B8F3D70-AAE7-4D20-A5F2-038A712CB701}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">SignatureMatcher</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXCFE5E543CDF34F12A43BC7AB572C4D9D">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[--!strict
+-- ScopedScanEngine: a slimmed-down HE-Utilities-style scan, restricted to
+-- one root instance's descendants (the container of items AssetSync just
+-- synced in) instead of the whole game:GetDescendants(). Reuses the same
+-- profanity and user-ID pattern lists as HE-Utilities so results agree.
+local Utils = require(script.Parent.Utils)
+
+local ScopedScanEngine = {}
+
+local function wordBounded(pattern)
+	return "%f[%a]" .. pattern .. "%f[%A]"
+end
+
+local PROFANITY_PATTERNS = {}
+do
+	local rawPatterns = {
+		"f+u+c+k+", "f+[^%a]*u+[^%a]*c+[^%a]*k+", "[f]+[u4@]+[c%(]+[k]+",
+		"sh[i!1]+t+", "b[i!1]+t+c+h+", "a+s+s+h+o+l+e+", "a+[s$]+[s$]+",
+		"d+[i!1]+c+k+", "c+[o0]+c+k+", "p+[u]+s+[s$]+[y]+", "c+u+n+t+",
+		"n+[i!1]+g+[g]+[e3]+[r]+", "n+[i!1]+g+[g]+[a@]+",
+		"f+[a@4]+g+[g]*[o0]*[t]*", "r+[e3]+t+[a@4]+r+d+",
+		"wh+[o0]+r+[e3]+", "[s$]+l+[u]+t+", "b+[a@4]+[s$]+t+[a@4]+r+d+",
+		"[ck]+r+[a@4]+p+", "p+[e3]+[e3]+[n]+[i!1]+[s$]+", "[a@4]+n+[u]+[s$]+",
+	}
+	for _, raw in ipairs(rawPatterns) do table.insert(PROFANITY_PATTERNS, wordBounded(raw)) end
+end
+
+local USERID_PATTERNS = {
+	"%.UserId%s*[=~]=?%s*%d+", "GetUserIdFromNameAsync", "GetNameFromUserIdAsync",
+	"[Aa]dmin[Ii][Dd]s?", "[Ww]hite[Ll]ist", "[Bb]lack[Ll]ist",
+	"[Aa]llowed[Uu]sers?", "[Bb]anned[Uu]sers?", "[Oo]wner[Ii][Dd]",
+}
+
+-- Scans root + all of its descendants for profanity (in scripts and UI
+-- text) and user-ID-related code patterns (in scripts only). Returns a
+-- flat array of { Object, Type, Count } records -- no line numbers or
+-- previews, since this is a quick post-sync check, not a full audit.
+function ScopedScanEngine.ScanContainer(root)
+	local results = {}
+	local targets = root:GetDescendants()
+	table.insert(targets, root)
+
+	for _, obj in ipairs(targets) do
+		if Utils.isLuaScript(obj) then
+			local ok, source = pcall(function() return obj.Source end)
+			if ok and type(source) == "string" then
+				local lowerSource = string.lower(source)
+				for _, pattern in ipairs(PROFANITY_PATTERNS) do
+					local matches, valid = Utils.scanPatternDetailed(lowerSource, pattern)
+					if valid and #matches > 0 then
+						table.insert(results, { Object = obj, Type = "Profanity", Count = #matches })
+					end
+				end
+				for _, pattern in ipairs(USERID_PATTERNS) do
+					local matches, valid = Utils.scanPatternDetailed(source, pattern)
+					if valid and #matches > 0 then
+						table.insert(results, { Object = obj, Type = "UserId", Count = #matches })
+					end
+				end
+			end
+		elseif Utils.isTextUIObject(obj) then
+			for _, text in ipairs(Utils.getScannableTexts(obj)) do
+				if type(text) == "string" and text ~= "" then
+					local lowerText = string.lower(text)
+					for _, pattern in ipairs(PROFANITY_PATTERNS) do
+						local matches, valid = Utils.scanPatternDetailed(lowerText, pattern)
+						if valid and #matches > 0 then
+							table.insert(results, { Object = obj, Type = "Profanity", Count = #matches })
+						end
+					end
+				end
+			end
+		end
+	end
+
+	return results
+end
+
+return ScopedScanEngine
+]]></ProtectedString>
+					<string name="ScriptGuid">{117C055B-31E5-491A-8A72-3C90478056A2}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">ScopedScanEngine</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+	<SharedStrings>
+		<SharedString md5="yuZpQdnvvUBOTYh1jqZ2cA=="></SharedString>
+	</SharedStrings>
+</roblox>
