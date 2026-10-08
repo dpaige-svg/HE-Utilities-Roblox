@@ -15,4 +15,4 @@ are not required for the plugin's local code analysis.
 
 Download the current plugin model:
 
-Current version: **0.2.0**
+Current version: **0.3**
