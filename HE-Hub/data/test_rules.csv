@@ -1,4 +1,0 @@
-id,name,rule_type,pattern,severity,confidence,category,description,enabled
-SIG-TEST-001,Test Suspicious Signature,Signature,suspicious_marker,High,High,KnownMalware,Controlled test signature,true
-SIG-TEST-002,Test Backdoor Signature,Signature,backdoor_test_marker,Critical,VeryHigh,Backdoor,Controlled test backdoor,true
-KEY-TEST-001,Test Suspicious Keyword,Keyword,suspicious_keyword,Medium,Low,SuspiciousCode,Controlled test keyword,true

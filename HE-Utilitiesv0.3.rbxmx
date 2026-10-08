@@ -1,0 +1,3995 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Folder" referent="RBX6559C671E31F439590E40D63AE420D2A">
+		<Properties>
+			<Color3 name="IconTint">
+				<R>0</R>
+				<G>0</G>
+				<B>0</B>
+			</Color3>
+			<BinaryString name="AttributesSerialize"></BinaryString>
+			<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+			<bool name="DefinesCapabilities">false</bool>
+			<string name="Name">HE-Utilities</string>
+			<int64 name="SourceAssetId">-1</int64>
+			<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+		</Properties>
+		<Item class="Script" referent="RBX13412111DEA84EBCB13DB6ECC7823FCE">
+			<Properties>
+				<ProtectedString name="Source"><![CDATA[local root = script.Parent
+
+local TestRunner =
+	require(
+		root.Tests["TestRunner"]
+	)
+
+local testRoot =
+	workspace:FindFirstChild(
+		"AssetTrustMonitor_TestRoot"
+	)
+
+if not testRoot then
+	warn(
+		"[HE-Utilties v0.3 Test] "
+			.. "AssetTrustMonitor_TestRoot was not found in Workspace."
+	)
+
+	return
+end
+
+print(
+	"[HE-Utilties v0.3 Test] "
+		.. "Starting scanner test..."
+)
+
+local success, findings =
+	TestRunner.Run(testRoot)
+
+if not success then
+	warn(
+		"[HE-Utilties v0.3 Test] "
+			.. "Scanner test failed."
+	)
+
+	return
+end
+
+print(
+	"[HE-Utilties v0.3 Test] "
+		.. "Finished with "
+		.. tostring(#findings)
+		.. " finding(s)."
+)]]></ProtectedString>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<token name="RunContext">0</token>
+				<string name="ScriptGuid">{932B8B65-D0E7-47C2-BBDB-B5CCC3083F5A}</string>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">RunTests</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX80071DE321664EC3A5B2C7E2990EC533">
+			<Properties>
+				<ProtectedString name="Source"><![CDATA[local root = script.Parent
+
+local Test =
+	require(
+		root.Tests["RemoteLibraryLoaderTest"]
+	)
+
+Test.Run()]]></ProtectedString>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<token name="RunContext">0</token>
+				<string name="ScriptGuid">{543CB7EC-CBF0-4D3E-9667-9203ADAD9010}</string>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">RunRemoteLibraryTest</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX93F1A07808864C80BF95E7ED08CE7E60">
+			<Properties>
+				<ProtectedString name="Source"><![CDATA[local root = script.Parent
+
+local Test =
+	require(
+		root.Tests[
+		"SecurityLibraryProviderTest"
+		]
+	)
+
+Test.Run()]]></ProtectedString>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<token name="RunContext">0</token>
+				<string name="ScriptGuid">{AC015C7C-9C13-46A6-A19D-9A6C0418F1DF}</string>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">RunSecurityLibraryProviderTest</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBXFD76D17F5A12427DA36822F9EA4271E7">
+			<Properties>
+				<ProtectedString name="Source"><![CDATA[local root = script.Parent
+
+local IntegrationTest =
+	require(
+		root.Tests[
+		"RemoteScannerIntegrationTest"
+		]
+	)
+
+
+local testRoot =
+	workspace:FindFirstChild(
+		"AssetTrustMonitor_TestRoot"
+	)
+
+
+if not testRoot then
+
+	warn(
+		"[HE-Utilties v0.3] "
+			.. "AssetTrustMonitor_TestRoot "
+			.. "was not found."
+	)
+
+	return
+
+end
+
+
+print(
+	"[HE-Utilties v0.3] "
+		.. "Starting remote scanner "
+		.. "integration test..."
+)
+
+
+local success, findings, source =
+	IntegrationTest.Run(
+		testRoot
+	)
+
+
+if not success then
+
+	warn(
+		"[HE-Utilties v0.3] "
+			.. "Remote scanner integration "
+			.. "test FAILED."
+	)
+
+	return
+
+end
+
+
+print(
+	"[HE-Utilties v0.3] "
+		.. "Integration test finished "
+		.. "with "
+		.. tostring(#findings)
+		.. " finding(s)."
+)
+
+
+print(
+	"[HE-Utilties v0.3] "
+		.. "Library source: "
+		.. tostring(source)
+)]]></ProtectedString>
+				<bool name="Disabled">true</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<token name="RunContext">0</token>
+				<string name="ScriptGuid">{76B027F9-1330-48FE-85D5-19BFEFDCD26D}</string>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">RunRemoteScannerIntegrationTest</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+		</Item>
+		<Item class="Script" referent="RBX49D2389D63AF42F78571E030E510ED8A">
+			<Properties>
+				<ProtectedString name="Source"><![CDATA[-- Save this package as a local Studio plugin. Runtime game scripts do nothing.
+if not plugin then return end
+
+local root = script.Parent
+local Widget = require(root.UI.MonitorWidget)
+local Controller = require(root.UI.MonitorController)
+local view = Widget.new(plugin)
+local monitor = Controller.new(view, game)
+
+plugin.Unloading:Connect(function() monitor:Destroy() end)
+monitor:Start()
+]]></ProtectedString>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<token name="RunContext">0</token>
+				<string name="ScriptGuid">{F818F23E-5ABA-441B-A612-322D140FB91A}</string>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">PluginMain</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+		</Item>
+		<Item class="Folder" referent="RBX789AE1C84A1A47B8B2E42FCC37CDD28A">
+			<Properties>
+				<Color3 name="IconTint">
+					<R>0</R>
+					<G>0</G>
+					<B>0</B>
+				</Color3>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">UI</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBX5CCC137D64134DE1B36D6D1B67A2D426">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[-- Only the current burst is retained. No history and no network access.
+local NotificationBatch = {}
+NotificationBatch.__index = NotificationBatch
+local ranks = { Info = 0, Low = 1, Medium = 2, High = 3, Critical = 4 }
+
+function NotificationBatch.new()
+	return setmetatable({ findings = {}, seen = {}, assets = {}, checked = 0, critical = 0, severity = "Info" }, NotificationBatch)
+end
+
+function NotificationBatch:Add(asset, instance, findings)
+	self.checked += 1
+	local identity = instance or "unknown"
+	local scriptSeen = self.seen[identity]
+	if not scriptSeen then scriptSeen = {}; self.seen[identity] = scriptSeen end
+	for _, finding in ipairs(findings) do
+		local location = (finding.LocationKind or "Source") .. ":" .. (finding.LocationName or "")
+		local rule = tostring(finding.RuleId or "")
+		local matched = tostring(finding.MatchedText or "")
+		-- Nested keys avoid delimiter collisions in paths or matched text.
+		local key = finding.Instance or finding.Path or identity
+		local locations = scriptSeen[key]
+		if not locations then locations = {}; scriptSeen[key] = locations end
+		local paths = locations[location]
+		if not paths then paths = {}; locations[location] = paths end
+		local matches = paths[rule]
+		if not matches then matches = {}; paths[rule] = matches end
+		if not matches[matched] then
+			matches[matched] = true
+			self.assets[asset] = true
+			table.insert(self.findings, { Finding = finding, Asset = asset.Name })
+			local severity = finding.Severity or "Low"
+			if (ranks[severity] or 1) > (ranks[self.severity] or 0) then self.severity = severity end
+			if severity == "Critical" then self.critical += 1 end
+		end
+	end
+end
+
+function NotificationBatch:Summary()
+	if self.checked == 0 then return nil end
+	local assets, name = 0, "asset"
+	for asset in pairs(self.assets) do assets += 1; name = asset.Name end
+	local count = #self.findings
+	local message
+	if count == 0 then
+		message = "Asset checked — No known suspicious patterns found."
+	elseif assets == 1 then
+		message = string.format("Suspicious content detected — %d finding%s in %s.", count, count == 1 and "" or "s", name)
+	else
+		message = string.format("Multiple threats detected\n%d assets require review\n%d suspicious findings\n%d critical finding%s", assets, count, self.critical, self.critical == 1 and "" or "s")
+	end
+	return { Message = message, Severity = self.severity, Findings = self.findings,
+		AssetCount = assets, FindingCount = count, CriticalCount = self.critical }
+end
+
+return NotificationBatch
+]]></ProtectedString>
+					<string name="ScriptGuid">{5114084F-BB57-44B5-8045-6AFA5EF23662}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">NotificationBatch</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX7E169854294F4224866C764BF8F2A7B5">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+local Batch = require(script.Parent.NotificationBatch)
+local AutoScan = require(root.Scanner.AutoScanService)
+local Scanner = require(root.Scanner.ObjectScanner)
+local Provider = require(root.Security.SecurityLibraryProvider)
+local Navigator = require(root.Actions.FindingNavigator)
+local Controller = {}
+Controller.__index = Controller
+local WINDOW = 1.5
+
+function Controller.new(view, watchedRoot, dependencies)
+	assert(typeof(watchedRoot) == "Instance", "Monitor requires an explicit root Instance")
+	local deps = dependencies or {}
+	local self = setmetatable({ view = view, root = watchedRoot, auto = deps.AutoScan or AutoScan,
+		provider = deps.Provider or Provider, navigator = deps.Navigator or Navigator,
+		connections = {}, added = setmetatable({}, { __mode = "k" }), batch = Batch.new(),
+		notification = nil, review = nil, index = 1, token = 0, generation = 0,
+		state = { Enabled = false, Paused = true, Library = "Unavailable", LastCheck = "Never", Starting = false },
+		destroyed = false }, Controller)
+	view:Bind({ Toggle = function() self:SetEnabled(not self.state.Enabled) end,
+		Review = function() self:OpenReview() end, Dismiss = function() self:Dismiss() end,
+		Previous = function() self:Move(-1) end, Next = function() self:Move(1) end,
+		GoTo = function() self:GoTo() end, Close = function() self:CloseReview() end })
+	self.auto.SetCallbacks({
+		OnScanCompleted = function(instance, findings) self:Completed(instance, findings) end,
+		OnQueueChanged = function() self:Refresh(); self:ScheduleFlush() end,
+		OnLargeQueue = function()
+			self:Refresh()
+			view:ShowNotice("Protection paused — queue limit reached. Toggle Auto Scan off and on to resume monitoring new changes.", "High")
+		end,
+		OnEnabledChanged = function() self:Refresh() end,
+		OnScanError = function()
+			view:ShowNotice("A script could not be checked.", "Medium")
+		end,
+	})
+	self.removalConnection = watchedRoot.DescendantRemoving:Connect(function(instance) self:RemoveObject(instance) end)
+	self:Refresh()
+	return self
+end
+
+function Controller:Refresh()
+	if self.destroyed then return end
+	self.state.Paused = not self.auto.IsRunning() or self.auto.IsPaused()
+	local previous = self.rendered
+	if previous and previous.Enabled == self.state.Enabled and previous.Paused == self.state.Paused
+		and previous.Library == self.state.Library and previous.LastCheck == self.state.LastCheck then return end
+	self.rendered = table.clone(self.state)
+	self.view:SetStatus(self.state)
+end
+
+function Controller:Track(instance)
+	-- One token per insertion turn. Resolve ancestry after all DescendantAdded
+	-- events arrive, so a nested imported pack keeps its own asset identity.
+	if not self.importToken then
+		local token = {}
+		self.importToken = token
+		task.defer(function() if self.importToken == token then self.importToken = nil end end)
+	end
+	self.added[instance] = self.importToken
+end
+
+function Controller:AssetFor(instance)
+	local token = self.added[instance]
+	local asset = instance
+	if token then
+		while asset.Parent and asset.Parent ~= self.root and self.added[asset.Parent] == token do
+			asset = asset.Parent
+		end
+		return asset
+	end
+	-- Existing scripts: prefer their containing Model/Tool, otherwise the
+	-- outermost Folder beneath a service (or the supplied test root).
+	local ancestor = instance.Parent
+	while ancestor and ancestor ~= self.root and ancestor.Parent ~= game do
+		if ancestor:IsA("Model") or ancestor:IsA("Tool") then return ancestor end
+		if ancestor:IsA("Folder") then asset = ancestor end
+		ancestor = ancestor.Parent
+	end
+	return asset
+end
+
+function Controller:Completed(instance, findings)
+	if self.destroyed or not self.state.Enabled then return end
+	self.state.LastCheck = os.date("%H:%M:%S")
+	self.batch:Add(self:AssetFor(instance), instance, findings)
+	self:Refresh()
+	self:ScheduleFlush()
+end
+
+function Controller:ScheduleFlush()
+	if self.destroyed or self.batch.checked == 0 or self.flushScheduled then return end
+	self.flushScheduled = true
+	local generation = self.generation
+	-- One timer for the burst, never one timer per script.
+	task.delay(WINDOW, function()
+		if self.destroyed or generation ~= self.generation then return end
+		self.flushScheduled = false
+		if self.auto.GetQueueSize() > 0 or self.auto.IsProcessing() then
+			-- Queue callbacks will schedule again. No polling loop.
+			return
+		end
+		local summary = self.batch:Summary()
+		self.batch = Batch.new()
+		if summary then self:Notify(summary) end
+	end)
+end
+
+function Controller:Notify(summary)
+	if summary.FindingCount > 0 then
+		local live = Batch.new()
+		for _, entry in ipairs(summary.Findings) do
+			local instance = entry.Finding.Instance
+			if typeof(instance) == "Instance" and instance:IsDescendantOf(self.root) then
+				live:Add(self:AssetFor(instance), instance, { entry.Finding })
+			end
+		end
+		summary = live:Summary()
+		if not summary then return end
+	end
+	-- A safe result must not erase an unresolved warning/review.
+	if summary.FindingCount == 0 and self.notification and self.notification.FindingCount > 0 then return end
+	self.token += 1
+	local token = self.token
+	self.notification = summary
+	self.view:ShowNotification(summary)
+	if summary.FindingCount == 0 then
+		task.delay(4, function()
+			if not self.destroyed and self.token == token then self:Dismiss() end
+		end)
+	end
+end
+
+function Controller:Dismiss()
+	self.token += 1
+	self.notification = nil
+	self.view:HideNotification()
+end
+
+function Controller:OpenReview()
+	if not self.notification or self.notification.FindingCount == 0 then return end
+	self.review = self.notification.Findings
+	self.index = 1
+	self.view:ShowFinding(self.review[self.index], self.index, #self.review)
+end
+
+function Controller:Move(delta)
+	if not self.review then return end
+	self.index = math.clamp(self.index + delta, 1, #self.review)
+	self.view:ShowFinding(self.review[self.index], self.index, #self.review)
+end
+
+function Controller:GoTo()
+	if not self.review then return false end
+	local ok, result, message = pcall(self.navigator.GoToFinding, self.review[self.index].Finding)
+	if not ok or not result then self.view:ShowNotice(message or "Studio could not open this script.", "Low") end
+	return ok and result
+end
+
+function Controller:CloseReview()
+	self.review = nil
+	self.view:HideReview()
+end
+
+function Controller:RemoveObject(instance)
+	self.added[instance] = nil
+	local function remains(entry)
+		local object = entry.Finding.Instance
+		return typeof(object) == "Instance" and object ~= instance
+			and not object:IsDescendantOf(instance) and object:IsDescendantOf(self.root)
+	end
+	if self.notification and self.notification.FindingCount > 0 then
+		local live = Batch.new()
+		local changed = false
+		for _, entry in ipairs(self.notification.Findings) do
+			if remains(entry) then
+				live:Add(self:AssetFor(entry.Finding.Instance), entry.Finding.Instance, { entry.Finding })
+			else changed = true end
+		end
+		if changed then
+			local summary = live:Summary()
+			if summary then self:Notify(summary) else self:Dismiss() end
+		end
+	end
+	if self.review then
+		local live = {}
+		local selected = self.review[self.index]
+		for _, entry in ipairs(self.review) do if remains(entry) then table.insert(live, entry) end end
+		if #live ~= #self.review then
+			if #live == 0 then
+				self:CloseReview()
+				self.view:ShowNotice("The reviewed objects were removed from the place.", "Low")
+			else
+				self.review = live
+				self.index = table.find(live, selected) or math.min(self.index, #live)
+				self.view:ShowFinding(live[self.index], self.index, #live)
+			end
+		end
+	end
+end
+
+function Controller:SetEnabled(enabled)
+	if self.destroyed then return end
+	self.generation += 1
+	local generation = self.generation
+	self.state.Enabled = enabled
+	self.state.Starting = enabled
+	self.flushScheduled = false
+	self.batch = Batch.new()
+	for _, connection in ipairs(self.connections) do connection:Disconnect() end
+	table.clear(self.connections)
+	self.added = setmetatable({}, { __mode = "k" })
+	self.importToken = nil
+	self.auto.Stop()
+	self:Refresh()
+	if not enabled then self.state.Starting = false; self:Refresh(); return end
+	-- Observe imports before library loading, then replay only the scripts
+	-- inserted during that load. Existing project scripts are not scanned.
+	local duringLoad = {}
+	local count = 0
+	table.insert(self.connections, self.root.DescendantAdded:Connect(function(instance)
+		self:Track(instance)
+		if self.state.Starting and Scanner.CanScan(instance) and Scanner.ShouldQueue(instance) and count < 1000 then
+			count += 1; table.insert(duringLoad, instance)
+		end
+	end))
+	task.spawn(function()
+		local ok, library, source = pcall(self.provider.GetLibrary)
+		if self.destroyed or generation ~= self.generation then return end
+		self.state.Library = ok and library and source or "Unavailable"
+		self.state.Starting = false
+		if not ok or not library then
+			self.view:ShowNotice("Protection paused — security library unavailable. Toggle Auto Scan to retry.", "High")
+			self:Refresh(); return
+		end
+		local started, message = self.auto.Start(self.root, Scanner, library)
+		if self.destroyed or generation ~= self.generation then return end
+		if not started then self.view:ShowNotice(message or "Auto Scan could not start.", "High") end
+		for _, instance in ipairs(duringLoad) do
+			if started and instance:IsDescendantOf(self.root) then self.auto.Queue(instance) end
+		end
+		self:Refresh()
+	end)
+end
+
+function Controller:Start()
+	self:SetEnabled(true)
+end
+
+function Controller:Destroy()
+	if self.destroyed then return end
+	self:SetEnabled(false)
+	self.destroyed = true
+	self.removalConnection:Disconnect()
+	self.auto.SetCallbacks({ OnScanCompleted = false, OnQueueChanged = false,
+		OnLargeQueue = false, OnEnabledChanged = false, OnScanError = false })
+	self.notification = nil; self.review = nil
+	self.view:Destroy()
+end
+
+return Controller
+]]></ProtectedString>
+					<string name="ScriptGuid">{1B37609E-50B3-45EF-82CF-4260BFEAF91A}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">MonitorController</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX2AFD7EADBCED4ED79914019A6E35093B">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local Widget = {}
+Widget.__index = Widget
+local palette = {
+	-- Shared visual values from the existing HE-Utilities theme.
+	Background = Color3.fromRGB(13, 13, 18), Panel = Color3.fromRGB(22, 22, 30),
+	Surface = Color3.fromRGB(30, 30, 42), Border = Color3.fromRGB(50, 50, 68),
+	Text = Color3.fromRGB(225, 225, 235), Muted = Color3.fromRGB(120, 120, 150),
+	Primary = Color3.fromRGB(35, 70, 140),
+	Info = Color3.fromRGB(55, 175, 110), Low = Color3.fromRGB(65, 130, 230),
+	Medium = Color3.fromRGB(220, 150, 40), High = Color3.fromRGB(210, 55, 55),
+	Critical = Color3.fromRGB(255, 70, 70),
+}
+
+local function create(class, parent, properties)
+	local item = Instance.new(class)
+	for key, value in pairs(properties) do item[key] = value end
+	item.Parent = parent
+	return item
+end
+
+local function outline(item)
+	create("UICorner", item, { CornerRadius = UDim.new(0, 6) })
+	create("UIStroke", item, { Color = palette.Border, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
+end
+
+local function panel(parent, name, y, height)
+	local item = create("Frame", parent, { Name = name, Position = UDim2.fromOffset(7, y),
+		Size = UDim2.new(1, -14, 0, height), BackgroundColor3 = palette.Panel, BorderSizePixel = 0 })
+	outline(item)
+	return item
+end
+
+local function label(parent, name, text, y, height, size)
+	return create("TextLabel", parent, { Name = name, Text = text, Position = UDim2.fromOffset(16, y),
+		Size = UDim2.new(1, -32, 0, height), BackgroundTransparency = 1, TextColor3 = palette.Text,
+		Font = Enum.Font.Gotham, TextSize = size or 12, TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top, TextWrapped = true, RichText = false })
+end
+
+local function button(parent, name, text, position, size)
+	local item = create("TextButton", parent, { Name = name, Text = text, Position = position, Size = size,
+		BackgroundColor3 = palette.Surface, BorderSizePixel = 0, TextColor3 = palette.Text,
+		TextSize = 11, Font = Enum.Font.GothamBold, AutoButtonColor = true })
+	outline(item)
+	return item
+end
+
+function Widget.new(pluginObject)
+	local dock = pluginObject:CreateDockWidgetPluginGuiAsync("AssetTrustMonitor.Background",
+		DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, true, false, 350, 320, 320, 320))
+	dock.Title = "HE-Utilties v0.3"
+	local review = pluginObject:CreateDockWidgetPluginGuiAsync("AssetTrustMonitor.Review",
+		DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, false, true, 390, 600, 350, 600))
+	review.Title = "HE-Utilties v0.3 — Review"
+	local self = setmetatable({ Dock = dock, ReviewDock = review, connections = {}, actions = {}, noticeToken = 0 }, Widget)
+	local frame = create("Frame", dock, { Name = "Monitor", Size = UDim2.fromScale(1, 1), BorderSizePixel = 0, BackgroundColor3 = palette.Background })
+	panel(frame, "HeaderPanel", 4, 36)
+	panel(frame, "StatusPanel", 45, 109)
+	panel(frame, "NotificationPanel", 159, 151)
+	self.statusDot = create("Frame", frame, { Name = "StatusDot", Position = UDim2.fromOffset(16, 17),
+		Size = UDim2.fromOffset(10, 10), BackgroundColor3 = palette.Medium, BorderSizePixel = 0 })
+	create("UICorner", self.statusDot, { CornerRadius = UDim.new(1, 0) })
+	local title = label(frame, "Title", "HE-Utilties v0.3", 14, 22, 13)
+	title.Position = UDim2.fromOffset(34, 14)
+	title.Size = UDim2.new(1, -50, 0, 22)
+	title.Font = Enum.Font.GothamBold
+	self.protection = label(frame, "Protection", "Protection Paused", 55, 22, 12)
+	self.protection.Font = Enum.Font.GothamBold
+	self.auto = label(frame, "AutoScan", "Auto Scan ON", 81, 19)
+	self.library = label(frame, "Library", "Library: Unavailable", 105, 19)
+	self.last = label(frame, "LastCheck", "Last Check: Never", 129, 19)
+	self.library.TextColor3 = palette.Muted; self.last.TextColor3 = palette.Muted
+	self.toggle = button(frame, "Toggle", "Turn Auto Scan OFF", UDim2.new(1, -166, 0, 77), UDim2.fromOffset(150, 27))
+	self.toggle.BackgroundColor3 = palette.Primary
+	self.message = label(frame, "Notification", "Monitoring new assets and script changes.", 172, 81, 12)
+	self.message.TextColor3 = palette.Muted
+	self.reviewButton = button(frame, "Review", "Review", UDim2.new(0, 16, 0, 263), UDim2.new(0.5, -24, 0, 30))
+	self.dismissButton = button(frame, "Dismiss", "Dismiss", UDim2.new(0.5, 8, 0, 263), UDim2.new(0.5, -24, 0, 30))
+	self.reviewButton.BackgroundColor3 = palette.Primary
+	self.reviewButton.Visible = false; self.dismissButton.Visible = false
+	local reviewFrame = create("Frame", review, { Name = "Finding", Size = UDim2.fromScale(1, 1), BorderSizePixel = 0, BackgroundColor3 = palette.Background })
+	panel(reviewFrame, "HeaderPanel", 4, 36)
+	panel(reviewFrame, "DetailsPanel", 45, 457)
+	self.heading = label(reviewFrame, "Position", "Finding 0 of 0", 14, 22, 13)
+	self.heading.Font = Enum.Font.GothamBold
+	self.fields = {}
+	local y = 55
+	for _, spec in ipairs({ {"Severity", 20}, {"Asset", 22}, {"Location", 20}, {"Rule ID", 20}, {"Confidence", 20},
+		{"Category", 22}, {"Description", 44}, {"Script path", 36}, {"Matched text", 42} }) do
+		local fieldLabel = label(reviewFrame, spec[1] .. "Label", spec[1], y, 17, 11)
+		fieldLabel.TextColor3 = palette.Muted
+		fieldLabel.Font = Enum.Font.GothamBold
+		if spec[1] == "Script path" then self.pathLabel = fieldLabel end
+		self.fields[spec[1]] = create("TextBox", reviewFrame, { Name = spec[1], Text = "", Position = UDim2.fromOffset(16, y + 17),
+			Size = UDim2.new(1, -32, 0, spec[2]), BackgroundTransparency = 1, TextColor3 = palette.Text,
+			Font = (spec[1] == "Script path" or spec[1] == "Matched text") and Enum.Font.Code or Enum.Font.Gotham,
+			TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top, TextWrapped = true, MultiLine = true,
+			ClearTextOnFocus = false, TextEditable = false, RichText = false })
+		y += spec[2] + 22
+	end
+	-- Keep one finding on screen. Long values remain selectable in read-only text boxes.
+	self.previous = button(reviewFrame, "Previous", "Previous", UDim2.new(0, 16, 1, -82), UDim2.new(0.28, -14, 0, 30))
+	self.goTo = button(reviewFrame, "GoTo", "Go To Script", UDim2.new(0.28, 8, 1, -82), UDim2.new(0.44, -16, 0, 30))
+	self.goTo.BackgroundColor3 = palette.Primary
+	self.next = button(reviewFrame, "Next", "Next", UDim2.new(0.72, 6, 1, -82), UDim2.new(0.28, -22, 0, 30))
+	self.close = button(reviewFrame, "Close", "Close", UDim2.new(0, 16, 1, -42), UDim2.new(1, -32, 0, 30))
+	for name, control in pairs({ Toggle = self.toggle, Review = self.reviewButton, Dismiss = self.dismissButton,
+		Previous = self.previous, Next = self.next, GoTo = self.goTo, Close = self.close }) do
+		table.insert(self.connections, control.Activated:Connect(function()
+			local action = self.actions[name]
+			if action then action() end
+		end))
+	end
+	table.insert(self.connections, review:GetPropertyChangedSignal("Enabled"):Connect(function()
+		if not review.Enabled and self.actions.Close then self.actions.Close() end
+	end))
+	local toolbar = pluginObject:CreateToolbar("HE-Utilties v0.3")
+	local open = toolbar:CreateButton("AssetTrustMonitor.Open", "Show HE-Utilties v0.3", "", "HE-Utilties v0.3")
+	open.ClickableWhenViewportHidden = true
+	table.insert(self.connections, open.Click:Connect(function() dock.Enabled = not dock.Enabled end))
+	table.insert(self.connections, dock:GetPropertyChangedSignal("Enabled"):Connect(function() open:SetActive(dock.Enabled) end))
+	open:SetActive(dock.Enabled)
+	self.toolbar = toolbar
+	return self
+end
+
+function Widget:Bind(actions) self.actions = actions end
+
+function Widget:SetStatus(state)
+	self.protection.Text = state.Paused and "Protection Paused" or "Protection Active"
+	self.protection.TextColor3 = state.Paused and palette.Medium or palette.Info
+	self.statusDot.BackgroundColor3 = self.protection.TextColor3
+	self.auto.Text = "Auto Scan " .. (state.Enabled and "ON" or "OFF")
+	self.toggle.Text = state.Enabled and "Turn Auto Scan OFF" or "Turn Auto Scan ON"
+	local names = { Remote = "Remote", LocalFallback = "Local Fallback", Unavailable = "Unavailable" }
+	self.library.Text = "Library: " .. (names[state.Library] or "Unavailable")
+	self.last.Text = "Last Check: " .. state.LastCheck
+	self.idleText = not state.Enabled and "Auto Scan is off." or state.Paused
+		and "Protection is paused." or "Monitoring new assets and script changes."
+	if not self.current and not self.showingNotice then self.message.Text = self.idleText end
+end
+
+function Widget:ShowNotification(summary)
+	self.noticeToken += 1
+	self.showingNotice = false
+	self.current = summary
+	self.message.Text = summary.Message
+	self.message.TextColor3 = palette[summary.Severity] or palette.Low
+	self.reviewButton.Visible = summary.FindingCount > 0
+	self.dismissButton.Visible = summary.FindingCount > 0
+end
+
+function Widget:HideNotification()
+	self.noticeToken += 1
+	self.showingNotice = false
+	self.current = nil
+	self.message.Text = self.idleText or "Monitoring new assets and script changes."
+	self.message.TextColor3 = palette.Muted
+	self.reviewButton.Visible = false; self.dismissButton.Visible = false
+end
+
+function Widget:ShowNotice(message, severity)
+	self.noticeToken += 1
+	self.showingNotice = true
+	local token = self.noticeToken
+	self.message.Text = message
+	self.message.TextColor3 = palette[severity] or palette.Medium
+	task.delay(5, function()
+		if self.destroyed or self.noticeToken ~= token then return end
+		if self.current then self:ShowNotification(self.current) else self:HideNotification() end
+	end)
+end
+
+function Widget:ShowFinding(entry, index, total)
+	local finding = entry.Finding
+	self.heading.Text = string.format("Finding %d of %d", index, total)
+	local values = { Severity = finding.Severity, Asset = entry.Asset, ["Rule ID"] = finding.RuleId,
+		Location = finding.LocationKind and (finding.LocationKind .. " · " .. (finding.LocationName or "")) or "Script Source",
+		Confidence = finding.Confidence, Category = finding.Category, Description = finding.Description,
+		["Script path"] = finding.Path, ["Matched text"] = finding.MatchedText }
+	for name, field in pairs(self.fields) do field.Text = tostring(values[name] or "—") end
+	self.pathLabel.Text = finding.LocationKind and "Object path" or "Script path"
+	self.goTo.Text = finding.LocationKind and "Go To Object" or "Go To Script"
+	self.fields.Severity.TextColor3 = palette[finding.Severity] or palette.Low
+	self.previous.Active = index > 1; self.previous.AutoButtonColor = index > 1
+	self.next.Active = index < total; self.next.AutoButtonColor = index < total
+	self.previous.TextTransparency = index == 1 and 0.5 or 0
+	self.next.TextTransparency = index == total and 0.5 or 0
+	self.ReviewDock.Enabled = true
+end
+
+function Widget:HideReview() self.ReviewDock.Enabled = false end
+
+function Widget:Destroy()
+	self.destroyed = true
+	for _, connection in ipairs(self.connections) do connection:Disconnect() end
+	self.actions = {}; self.current = nil
+	self.Dock:Destroy(); self.ReviewDock:Destroy(); self.toolbar:Destroy()
+end
+
+return Widget
+]]></ProtectedString>
+					<string name="ScriptGuid">{1A0737E9-621E-40C1-AD4E-E723F34C2D41}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">MonitorWidget</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Folder" referent="RBX22C76F0610F6439D8310678201AF647B">
+			<Properties>
+				<Color3 name="IconTint">
+					<R>0</R>
+					<G>0</G>
+					<B>0</B>
+				</Color3>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">Scanner</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBX8C2E4AB044544AD495F7C3A94004B37B">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local Finding = {}
+
+function Finding.new(data)
+	return {
+		RuleId = data.RuleId,
+		RuleName = data.RuleName,
+
+		Instance = data.Instance,
+		Path = data.Path,
+
+		MatchedText = data.MatchedText,
+
+		Severity = data.Severity,
+		Confidence = data.Confidence,
+		Category = data.Category,
+
+		Description = data.Description,
+
+		SourceType = data.SourceType,
+	}
+end
+
+return Finding]]></ProtectedString>
+					<string name="ScriptGuid">{C384E892-B73A-409A-A855-605A4EE99CDB}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">Finding</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX8C794CC7BCC848D78D2A1D9DE951640D">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local Finding =
+	require(script.Parent["Finding"])
+
+local ScriptScanner = {}
+
+
+local MAX_SOURCE_LENGTH = 500000
+
+local SCRIPT_CLASSES = {
+	Script = true,
+	LocalScript = true,
+	ModuleScript = true,
+}
+
+
+local function isScript(instance)
+	return SCRIPT_CLASSES[instance.ClassName] == true
+end
+
+local function createSignatureFinding(
+	instance,
+	signature
+)
+	return Finding.new({
+		RuleId = signature.Id,
+		RuleName = signature.Name,
+
+		Instance = instance,
+		Path = instance:GetFullName(),
+
+		MatchedText = signature.Pattern,
+
+		Severity = signature.Severity,
+		Confidence = signature.Confidence,
+		Category = signature.Category,
+
+		Description = signature.Description,
+
+		SourceType = "Signature",
+	})
+end
+
+local function createKeywordFinding(
+	instance,
+	keyword
+)
+	return Finding.new({
+		RuleId = keyword.Id,
+		RuleName = keyword.Keyword,
+
+		Instance = instance,
+		Path = instance:GetFullName(),
+
+		MatchedText = keyword.Keyword,
+
+		Severity = keyword.Severity,
+		Confidence = keyword.Confidence,
+		Category = keyword.Category,
+
+		Description = keyword.Description,
+
+		SourceType = "Keyword",
+	})
+end
+
+
+function ScriptScanner.IsScript(instance)
+	if not instance then
+		return false
+	end
+
+	return isScript(instance)
+end
+
+function ScriptScanner.ScanInstance(
+	instance,
+	securityLibrary
+)
+	local findings = {}
+
+
+	if not instance then
+		return findings
+	end
+
+	if not isScript(instance) then
+		return findings
+	end
+
+
+	if type(securityLibrary) ~= "table" then
+		return findings
+	end
+
+	if type(securityLibrary.Signatures) ~= "table" then
+		return findings
+	end
+
+	if type(securityLibrary.Keywords) ~= "table" then
+		return findings
+	end
+
+
+	local success, source =
+		pcall(function()
+			return instance.Source
+		end)
+
+	if not success then
+		return findings
+	end
+
+	if type(source) ~= "string" then
+		return findings
+	end
+
+
+	if #source > MAX_SOURCE_LENGTH then
+		warn(
+			"[HE-Utilties v0.3]",
+			"Skipped unusually large script:",
+			instance:GetFullName(),
+			"Source length:",
+			#source
+		)
+
+		return findings
+	end
+
+
+	for _, signature in ipairs(
+		securityLibrary.Signatures
+		) do
+		if type(signature.Pattern) == "string"
+			and signature.Pattern ~= "" then
+
+			local found =
+				string.find(
+					source,
+					signature.Pattern,
+					1,
+					true
+				)
+
+			if found then
+				table.insert(
+					findings,
+					createSignatureFinding(
+						instance,
+						signature
+					)
+				)
+			end
+		end
+	end
+
+
+	for _, keyword in ipairs(
+		securityLibrary.Keywords
+		) do
+		if type(keyword.Keyword) == "string"
+			and keyword.Keyword ~= "" then
+
+			local found =
+				string.find(
+					source,
+					keyword.Keyword,
+					1,
+					true
+				)
+
+			if found then
+				table.insert(
+					findings,
+					createKeywordFinding(
+						instance,
+						keyword
+					)
+				)
+			end
+		end
+	end
+
+	return findings
+end
+
+return ScriptScanner]]></ProtectedString>
+					<string name="ScriptGuid">{8E15DA63-2532-4F55-ADC3-0F8FCA6B8DBE}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">ScriptScanner</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXD7F6312DBFDC441DACCE451AFF15C78B">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local ScriptScanner =
+	require(script.Parent["ScriptScanner"])
+
+local ProjectScanner = {}
+
+function ProjectScanner.Scan(
+	root,
+	securityLibrary
+)
+	local findings = {}
+
+	local function scanInstance(instance)
+		local success, results =
+			pcall(function()
+				return ScriptScanner.ScanInstance(
+					instance,
+					securityLibrary
+				)
+			end)
+
+		if not success then
+			warn(
+				"HE-Utilties v0.3 could not scan:",
+				instance:GetFullName()
+			)
+
+			return
+		end
+
+		for _, finding in ipairs(results) do
+			table.insert(findings, finding)
+		end
+	end
+
+	scanInstance(root)
+
+	for _, descendant in ipairs(
+		root:GetDescendants()
+		) do
+		scanInstance(descendant)
+	end
+
+	return findings
+end
+
+return ProjectScanner]]></ProtectedString>
+					<string name="ScriptGuid">{9DD98222-81ED-430D-A0BE-F3D93B5EE650}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">ProjectScanner</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXD6CF703ECFF9494590BDED6E0C573EC4">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local AutoScanService = {}
+local DefaultScanner = require(script.Parent.ScriptScanner)
+local Provider = require(script.Parent.Parent.Security.SecurityLibraryProvider)
+local Reporter = require(script.Parent.DetectionReporter)
+local generation = 0
+local starting = false
+local reportBusy = false
+local pendingReports = {}
+local pendingRuleCount = 0
+
+
+
+local BATCH_SIZE = 5
+
+
+local BATCH_DELAY = 0.03
+
+local SOURCE_DEBOUNCE = 0.75
+
+local MAX_QUEUE_SIZE = 1000
+
+local enabled = false
+local running = false
+local pausedForLargeQueue = false
+
+local rootInstance = nil
+local function inRoot(instance)
+	return rootInstance ~= nil and (instance == rootInstance or instance:IsDescendantOf(rootInstance))
+end
+local scriptScanner = nil
+local securityLibrary = nil
+
+local queue = {}
+
+
+local queued = {}
+
+
+local debounceTokens = {}
+
+local connections = {}
+
+local watchedScripts = {}
+
+
+local callbacks = {
+	OnFindings = nil,
+	OnScanError = nil,
+	OnQueueChanged = nil,
+	OnLargeQueue = nil,
+	OnEnabledChanged = nil,
+}
+
+
+local function fireCallback(
+	callbackName,
+	...
+)
+	local callback =
+		callbacks[callbackName]
+
+	if type(callback) ~= "function" then
+		return
+	end
+
+	local success, errorMessage =
+		pcall(
+			callback,
+			...
+		)
+
+	if not success then
+		warn(
+			"[HE-Utilties v0.3]",
+			"Callback failed:",
+			callbackName,
+			errorMessage
+		)
+	end
+end
+
+local function getQueueSize()
+	return #queue
+end
+
+local function updateQueueCallback()
+	fireCallback(
+		"OnQueueChanged",
+		getQueueSize()
+	)
+end
+
+local function isScript(instance)
+	if not scriptScanner then
+		return false
+	end
+
+	return (scriptScanner.CanScan or scriptScanner.IsScript)(instance)
+end
+
+local function clearQueue()
+	table.clear(queue)
+	table.clear(queued)
+
+	updateQueueCallback()
+end
+
+local function queueScript(instance)
+	if not enabled then
+		return false
+	end
+
+	if pausedForLargeQueue then
+		return false
+	end
+
+	if not instance or not inRoot(instance) then
+		return false
+	end
+
+	if instance.Parent == nil then
+		return false
+	end
+
+	if not isScript(instance) then
+		return false
+	end
+
+	if queued[instance] then
+		return false
+	end
+
+
+	if #queue >= MAX_QUEUE_SIZE then
+		pausedForLargeQueue = true
+
+		fireCallback(
+			"OnLargeQueue",
+			#queue
+		)
+
+		warn(
+			"[HE-Utilties v0.3]",
+			"Auto Scan paused because the scan queue",
+			"became too large."
+		)
+
+		return false
+	end
+
+	queued[instance] = true
+
+	table.insert(
+		queue,
+		instance
+	)
+
+	updateQueueCallback()
+
+	return true
+end
+
+
+local function scanScript(instance)
+	if not instance or not inRoot(instance) then
+		return
+	end
+
+	if instance.Parent == nil then
+		return
+	end
+
+	local success, findings =
+		pcall(function()
+			return scriptScanner.ScanInstance(
+				instance,
+				securityLibrary
+			)
+		end)
+
+	if not success then
+		warn(
+			"[HE-Utilties v0.3]",
+			"Could not scan:",
+			instance:GetFullName()
+		)
+
+		fireCallback(
+			"OnScanError",
+			instance,
+			findings
+		)
+
+		return
+	end
+
+	local counts = Reporter.Aggregate(findings)
+	fireCallback("OnScanCompleted", instance, findings, counts)
+	if #findings > 0 then
+		fireCallback(
+			"OnFindings",
+			instance,
+			findings
+		)
+	end
+	return counts
+end
+
+local function processQueue()
+	if running then
+		return
+	end
+
+	if not enabled then
+		return
+	end
+
+	if pausedForLargeQueue then
+		return
+	end
+
+	running = true
+	local session = generation
+
+	task.defer(function()
+
+		while enabled and generation == session
+			and not pausedForLargeQueue
+			and #queue > 0 do
+
+			local processed =
+				0
+			local counts = {}
+			local remaining = #queue
+
+			while processed < BATCH_SIZE and remaining > 0
+				and enabled and generation == session and #queue > 0 do
+				remaining -= 1
+
+				local instance =
+					table.remove(
+						queue,
+						1
+					)
+
+				if instance and debounceTokens[instance] and debounceTokens[instance] > os.clock() then
+					table.insert(queue, instance)
+					continue
+				end
+				if instance then
+					queued[instance] = nil
+					debounceTokens[instance] = nil
+
+					local result = scanScript(instance)
+					for id, count in pairs(result or {}) do
+						counts[id] = (counts[id] or 0) + count
+					end
+				end
+
+				processed += 1
+			end
+
+			if generation ~= session or not enabled then return end
+			-- Bounded count-only outbox, with one HTTP request in flight.
+			for id, count in pairs(counts) do
+				if pendingReports[id] or pendingRuleCount < 1000 then
+					if not pendingReports[id] then pendingRuleCount += 1 end
+					pendingReports[id] = math.min((pendingReports[id] or 0) + count, 2147483647)
+				end
+			end
+			if next(pendingReports) and not reportBusy then
+				reportBusy = true
+				task.spawn(function()
+					while next(pendingReports) do
+						local reportSession = generation
+						local report = pendingReports
+						pendingReports = {}
+						pendingRuleCount = 0
+						local ok, success, detail = pcall(Reporter.Report, report)
+						if generation == reportSession and enabled then
+							fireCallback("OnReportCompleted", ok and success, report, detail)
+						end
+						task.wait(BATCH_DELAY)
+					end
+					reportBusy = false
+				end)
+			end
+			updateQueueCallback()
+
+
+			task.wait(BATCH_DELAY)
+		end
+
+		if generation ~= session then return end
+		running = false
+
+		updateQueueCallback()
+
+		if enabled
+			and not pausedForLargeQueue
+			and #queue > 0 then
+
+			processQueue()
+		end
+	end)
+end
+
+
+local function scheduleSourceScan(instance)
+	if not enabled or not inRoot(instance) then return end
+	-- Debounce deadlines share the bounded queue; no task is spawned per edit.
+	if queued[instance] or queueScript(instance) then
+		debounceTokens[instance] = os.clock() + SOURCE_DEBOUNCE
+	end
+	processQueue()
+end
+
+local function watchScript(instance)
+	if not enabled or not isScript(instance) or watchedScripts[instance] then return end
+	if scriptScanner.WatchInstance then
+		watchedScripts[instance] = scriptScanner.WatchInstance(instance, function() scheduleSourceScan(instance) end)
+		return
+	end
+	local sourceConnection = instance:GetPropertyChangedSignal("Source"):Connect(function()
+		scheduleSourceScan(instance)
+	end)
+	watchedScripts[instance] = sourceConnection
+end
+
+local function unwatchScript(instance)
+	local connection = watchedScripts[instance]
+	if connection then connection:Disconnect() end
+	watchedScripts[instance] = nil
+	debounceTokens[instance] = nil
+	queued[instance] = nil
+	local index = table.find(queue, instance)
+	if index then table.remove(queue, index) end
+end
+
+function AutoScanService.SetCallbacks(
+	newCallbacks
+)
+	if type(newCallbacks) ~= "table" then
+		return
+	end
+
+	for name, callback in pairs(
+		newCallbacks
+		) do
+		if callbacks[name] ~= nil
+			or name == "OnFindings"
+			or name == "OnScanError"
+			or name == "OnQueueChanged"
+			or name == "OnLargeQueue"
+			or name == "OnEnabledChanged"
+			or name == "OnScanCompleted"
+			or name == "OnReportCompleted" then
+
+			callbacks[name] =
+				callback
+		end
+	end
+end
+
+
+function AutoScanService.Start(
+	root,
+	scanner,
+	library
+)
+	if enabled or starting then
+		return false,
+			"Auto Scan is already running."
+	end
+
+	if typeof(root) ~= "Instance" then
+		return false,
+			"Auto Scan requires a root Instance."
+	end
+
+	scanner = scanner or DefaultScanner
+	if library == nil then
+		starting = true
+		local session = generation
+		local ok, result = pcall(Provider.GetLibrary)
+		if generation ~= session then return false, "Start cancelled" end
+		starting = false
+		if not ok then return false, "Security library unavailable" end
+		library = result
+	end
+	if type(scanner) ~= "table" then
+		return false,
+			"Auto Scan requires ScriptScanner."
+	end
+
+	if type(scanner.ScanInstance)
+		~= "function" then
+
+		return false,
+			"ScriptScanner.ScanInstance is missing."
+	end
+
+	if type(scanner.IsScript)
+		~= "function" then
+
+		return false,
+			"ScriptScanner.IsScript is missing."
+	end
+
+	if type(library) ~= "table" then
+		return false,
+			"Security library is invalid."
+	end
+
+
+	rootInstance =
+		root
+
+	scriptScanner =
+		scanner
+
+	securityLibrary =
+		library
+
+	enabled =
+		true
+
+	running =
+		false
+
+	pausedForLargeQueue =
+		false
+
+	clearQueue()
+
+	table.clear(
+		debounceTokens
+	)
+
+	table.clear(
+		watchedScripts
+	)
+
+
+	watchScript(rootInstance)
+
+
+	local descendantAddedConnection =
+		rootInstance.DescendantAdded:Connect(
+			function(instance)
+
+				if not enabled then
+					return
+				end
+
+				if not isScript(instance) then
+					return
+				end
+
+				watchScript(instance)
+
+				if not scriptScanner.ShouldQueue or scriptScanner.ShouldQueue(instance) then
+					scheduleSourceScan(instance)
+				end
+			end
+		)
+
+	table.insert(
+		connections,
+		descendantAddedConnection
+	)
+	table.insert(connections, rootInstance.DescendantRemoving:Connect(unwatchScript))
+	table.insert(connections, rootInstance.Destroying:Connect(AutoScanService.Stop))
+	if scriptScanner.WatchRoot then
+		table.insert(connections, scriptScanner.WatchRoot(rootInstance, scheduleSourceScan))
+	end
+	local session = generation
+	local extended = scriptScanner.WatchInstance ~= nil
+	for index, instance in ipairs(rootInstance:GetDescendants()) do
+		if not enabled or generation ~= session then return false, "Start cancelled" end
+		watchScript(instance)
+		if extended and index % 100 == 0 then task.wait() end
+	end
+	if not enabled or generation ~= session then return false, "Start cancelled" end
+
+	fireCallback(
+		"OnEnabledChanged",
+		true
+	)
+
+	print(
+		"[HE-Utilties v0.3]",
+		"Auto Scan enabled."
+	)
+
+	return true
+end
+
+
+function AutoScanService.Stop()
+	generation += 1
+	starting = false
+	pendingReports = {}
+	pendingRuleCount = 0
+	if not enabled then
+		return
+	end
+
+	enabled = false
+	running = false
+	pausedForLargeQueue = false
+	for instance, connection in pairs(watchedScripts) do
+		connection:Disconnect()
+	end
+
+	for _, connection in ipairs(
+		connections
+		) do
+		if connection.Connected then
+			connection:Disconnect()
+		end
+	end
+
+	table.clear(
+		connections
+	)
+
+
+	clearQueue()
+
+	table.clear(
+		debounceTokens
+	)
+
+	table.clear(
+		watchedScripts
+	)
+
+	rootInstance =
+		nil
+
+	scriptScanner =
+		nil
+
+	securityLibrary =
+		nil
+
+	fireCallback(
+		"OnEnabledChanged",
+		false
+	)
+
+	print(
+		"[HE-Utilties v0.3]",
+		"Auto Scan disabled."
+	)
+end
+
+function AutoScanService.Queue(
+	instance
+)
+	local added =
+		queueScript(instance)
+
+	if added then
+		processQueue()
+	end
+
+	return added
+end
+
+function AutoScanService.Resume()
+	if not enabled then
+		return false
+	end
+
+	if not pausedForLargeQueue then
+		return true
+	end
+
+	pausedForLargeQueue =
+		false
+
+	processQueue()
+
+	return true
+end
+
+
+function AutoScanService.ClearQueue()
+	clearQueue()
+
+	pausedForLargeQueue =
+		false
+end
+
+
+function AutoScanService.IsEnabled()
+	return enabled
+end
+
+function AutoScanService.IsRunning()
+	return enabled
+end
+
+function AutoScanService.IsProcessing()
+	return running
+end
+
+function AutoScanService.IsPaused()
+	return pausedForLargeQueue
+end
+
+function AutoScanService.GetQueueSize()
+	return #queue
+end
+
+return AutoScanService
+]]></ProtectedString>
+					<string name="ScriptGuid">{91001261-3E8B-4222-98ED-CD836CFC5810}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">AutoScanService</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX5C6C3C07D38C4D699072194A9079E7D4">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local HttpService = game:GetService("HttpService")
+local DetectionReporter = {}
+-- Optional production HTTPS endpoint. Detection reporting stays local when
+-- this value is empty.
+local URL = ""
+
+function DetectionReporter.IsConfigured()
+	return URL:match("^https://") ~= nil
+end
+
+function DetectionReporter.Aggregate(findings, counts)
+	counts = counts or {}
+	for _, finding in ipairs(findings) do
+		local id = finding.RuleId
+		if type(id) == "string" and id:match("%S") then
+			counts[id] = (counts[id] or 0) + 1
+		end
+	end
+	return counts
+end
+
+function DetectionReporter.Report(counts)
+	if not DetectionReporter.IsConfigured() then
+		return true, "Detection reporting is not configured"
+	end
+
+	-- Construct a fresh allowlisted payload. Findings never enter JSONEncode.
+	local detections = {}
+	for id, count in pairs(counts) do
+		if type(id) == "string" and id:match("%S")
+			and type(count) == "number" and count > 0
+			and count <= 2147483647 and count % 1 == 0 then
+			table.insert(detections, { ruleId = id, count = count })
+		end
+	end
+	if #detections == 0 then return true end
+	local ok, response = pcall(function()
+		return HttpService:RequestAsync({
+			Url = URL,
+			Method = "POST",
+			Headers = { ["Content-Type"] = "application/json" },
+			Body = HttpService:JSONEncode({ detections = detections }),
+		})
+	end)
+	if not ok then return false, "Detection endpoint unavailable" end
+	return response.Success, response.StatusCode
+end
+
+return DetectionReporter
+]]></ProtectedString>
+					<string name="ScriptGuid">{2BF4FD8B-7CE8-4829-A29F-339A033AC6F4}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">DetectionReporter</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX11A2CC8E12B2419A96DD1928E60DDF4C">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[-- Adapter around the unchanged script scanner; metadata stays inside Studio.
+local ScriptScanner = require(script.Parent.ScriptScanner)
+local Finding = require(script.Parent.Finding)
+local CollectionService = game:GetService("CollectionService")
+local ObjectScanner = { IsScript = ScriptScanner.IsScript }
+local TEXT_CLASSES = { TextLabel = true, TextButton = true, TextBox = true }
+
+function ObjectScanner.CanScan(instance)
+	local ancestor = instance
+	while ancestor do
+		if ancestor:IsA("DockWidgetPluginGui") then return false end
+		if ancestor.Parent == game and (ancestor.Name == "CoreGui" or ancestor.Name == "CorePackages"
+			or ancestor.Name == "PluginGuiService") then return false end
+		ancestor = ancestor.Parent
+	end
+	return true
+end
+
+function ObjectScanner.ShouldQueue(instance)
+	return ScriptScanner.IsScript(instance) or TEXT_CLASSES[instance.ClassName]
+		or next(instance:GetAttributes()) ~= nil or #CollectionService:GetTags(instance) > 0
+end
+
+function ObjectScanner.ScanInstance(instance, library)
+	local findings = ScriptScanner.ScanInstance(instance, library)
+	local budget = 500000
+	local function scan(text, kind, field)
+		if type(text) ~= "string" or text == "" or #text > budget then return end
+		budget -= #text
+		local function match(rule, pattern, ruleType)
+			if type(pattern) ~= "string" or pattern == "" or not string.find(text, pattern, 1, true) then return end
+			local finding = Finding.new({ RuleId = rule.Id, RuleName = rule.Name or rule.Keyword,
+				Instance = instance, Path = instance:GetFullName(), MatchedText = pattern,
+				Severity = rule.Severity, Confidence = rule.Confidence, Category = rule.Category,
+				Description = rule.Description, SourceType = ruleType })
+			finding.LocationKind = kind
+			finding.LocationName = field
+			table.insert(findings, finding)
+		end
+		for _, rule in ipairs(library.Signatures or {}) do match(rule, rule.Pattern, "Signature") end
+		for _, rule in ipairs(library.Keywords or {}) do match(rule, rule.Keyword, "Keyword") end
+	end
+	if TEXT_CLASSES[instance.ClassName] then scan(instance.Text, "UI Text", "Text") end
+	if instance:IsA("TextBox") then scan(instance.PlaceholderText, "UI Text", "PlaceholderText") end
+	-- Scan values only; attribute names are labels, not executable/text content.
+	local attributes = instance:GetAttributes()
+	local names = {}
+	for name in pairs(attributes) do table.insert(names, name) end
+	table.sort(names)
+	for _, name in ipairs(names) do
+		local value = attributes[name]
+		if type(value) == "string" or type(value) == "number" or type(value) == "boolean" then
+			scan(tostring(value), "Attribute", name)
+		end
+	end
+	local tags = CollectionService:GetTags(instance)
+	table.sort(tags)
+	for _, tag in ipairs(tags) do scan(tag, "Tag", tag) end
+	return findings
+end
+
+local function connectionGroup(connections, onDisconnect)
+	local group = { Connected = true }
+	function group:Disconnect()
+		if not self.Connected then return end
+		self.Connected = false
+		for _, connection in ipairs(connections) do connection:Disconnect() end
+		if onDisconnect then onDisconnect() end
+	end
+	return group
+end
+
+function ObjectScanner.WatchInstance(instance, changed)
+	local connections = { instance.AttributeChanged:Connect(changed) }
+	if ScriptScanner.IsScript(instance) then
+		table.insert(connections, instance:GetPropertyChangedSignal("Source"):Connect(changed))
+	end
+	if TEXT_CLASSES[instance.ClassName] then
+		table.insert(connections, instance:GetPropertyChangedSignal("Text"):Connect(changed))
+	end
+	if instance:IsA("TextBox") then
+		table.insert(connections, instance:GetPropertyChangedSignal("PlaceholderText"):Connect(changed))
+	end
+	return connectionGroup(connections)
+end
+
+function ObjectScanner.WatchRoot(root, changed)
+	local active = true
+	local tags = {}
+	local function inRoot(instance)
+		return active and (instance == root or instance:IsDescendantOf(root)) and ObjectScanner.CanScan(instance)
+	end
+	local function onChange(instance) if inRoot(instance) then changed(instance) end end
+	local function watchTag(tag)
+		if tags[tag] then return end
+		tags[tag] = connectionGroup({ CollectionService:GetInstanceAddedSignal(tag):Connect(onChange),
+			CollectionService:GetInstanceRemovedSignal(tag):Connect(onChange) })
+	end
+	local connections = {
+		CollectionService.TagAdded:Connect(function(tag)
+			if not active then return end
+			watchTag(tag)
+			-- The first use predates this tag's listener; include it explicitly.
+			for index, instance in ipairs(CollectionService:GetTagged(tag)) do
+				if not active then return end
+				onChange(instance)
+				if index % 100 == 0 then task.wait() end
+			end
+		end),
+		CollectionService.TagRemoved:Connect(function(tag)
+			-- Per-instance removal events perform the rescans; release unused listeners.
+			task.defer(function()
+				if active and tags[tag] and #CollectionService:GetTagged(tag) == 0 then
+					tags[tag]:Disconnect(); tags[tag] = nil
+				end
+			end)
+		end),
+	}
+	for _, tag in ipairs(CollectionService:GetAllTags()) do watchTag(tag) end
+	return connectionGroup(connections, function()
+		active = false
+		for _, group in pairs(tags) do group:Disconnect() end
+		table.clear(tags)
+	end)
+end
+
+return ObjectScanner
+]]></ProtectedString>
+					<string name="ScriptGuid">{F93A117B-4E1E-4FE0-B310-9807232ED001}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">ObjectScanner</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Folder" referent="RBXC40AFE5B1730468ABB0E546114F3280A">
+			<Properties>
+				<Color3 name="IconTint">
+					<R>0</R>
+					<G>0</G>
+					<B>0</B>
+				</Color3>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">Security</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBX33557F90F2ED4FD88ED27B3B264B2A7F">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local SecurityLibrary = {}
+
+SecurityLibrary.Version = "1.3.1"
+
+SecurityLibrary.Signatures = {
+	{
+		Id = "SIG-RCE-001",
+		Name = "Remote code through game HttpGet",
+		Pattern = "loadstring(game:HttpGet",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "RemoteCodeExecution",
+		Description = "Downloads text through game:HttpGet and executes it as code.",
+	},
+	{
+		Id = "SIG-RCE-002",
+		Name = "Remote code through game.HttpGet",
+		Pattern = "loadstring(game.HttpGet",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "RemoteCodeExecution",
+		Description = "Downloads text through game.HttpGet and executes it as code.",
+	},
+	{
+		Id = "SIG-RCE-003",
+		Name = "Remote code through HttpService",
+		Pattern = "loadstring(HttpService:GetAsync",
+		Severity = "Critical",
+		Confidence = "High",
+		Category = "RemoteCodeExecution",
+		Description = "Executes source downloaded through HttpService.",
+	},
+	{
+		Id = "SIG-EXPLOIT-001",
+		Name = "Executor environment access",
+		Pattern = "getgenv()",
+		Severity = "High",
+		Confidence = "High",
+		Category = "ExploitAPI",
+		Description = "Uses an executor-only global environment API.",
+	},
+	{
+		Id = "SIG-EXPLOIT-002",
+		Name = "Executor HTTP request",
+		Pattern = "syn.request(",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "ExploitAPI",
+		Description = "Uses an executor-specific network request API.",
+	},
+	{
+		Id = "SIG-EXPLOIT-003",
+		Name = "Function hook",
+		Pattern = "hookfunction(",
+		Severity = "High",
+		Confidence = "High",
+		Category = "RuntimeTampering",
+		Description = "Attempts to replace or intercept another function at runtime.",
+	},
+	{
+		Id = "SIG-EXPLOIT-004",
+		Name = "Metatable access",
+		Pattern = "getrawmetatable(",
+		Severity = "High",
+		Confidence = "High",
+		Category = "RuntimeTampering",
+		Description = "Uses an executor-oriented raw metatable API.",
+	},
+	{
+		Id = "SIG-EXPLOIT-005",
+		Name = "Readonly state bypass",
+		Pattern = "setreadonly(",
+		Severity = "High",
+		Confidence = "High",
+		Category = "RuntimeTampering",
+		Description = "Attempts to change protected metatable state.",
+	},
+	{
+		Id = "SIG-EXPLOIT-006",
+		Name = "Local file write",
+		Pattern = "writefile(",
+		Severity = "High",
+		Confidence = "High",
+		Category = "ExploitAPI",
+		Description = "Uses an executor-only local file write API.",
+	},
+	{
+		Id = "SIG-EXFIL-001",
+		Name = "Discord webhook endpoint",
+		Pattern = "discord.com/api/webhooks",
+		Severity = "High",
+		Confidence = "High",
+		Category = "DataExfiltration",
+		Description = "Contains a Discord webhook endpoint often used to export collected data.",
+	},
+	{
+		Id = "SIG-DOWNLOAD-001",
+		Name = "Pastebin raw payload",
+		Pattern = "pastebin.com/raw",
+		Severity = "High",
+		Confidence = "Medium",
+		Category = "RemotePayload",
+		Description = "References a remotely hosted raw payload that requires review.",
+	},
+	{
+		Id = "SIG-BACKDOOR-001",
+		Name = "Legacy PluginManager injection",
+		Pattern = "getfenv().PluginManager():CreatePlugin()",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "Backdoor",
+		Description = "Creates a plugin through a legacy environment lookup used by known injected scripts.",
+	},
+	{
+		Id = "SIG-BACKDOOR-002",
+		Name = "Obfuscated RoSync loader",
+		Pattern = "getfenv()[string.reverse(\"\\101\\114\\105\\117\\113\\101\\114\")]",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "Backdoor",
+		Description = "Reconstructs require through reversed escaped text before loading a remote module.",
+	},
+	{
+		Id = "SIG-BACKDOOR-003",
+		Name = "Known Stys module 5869080069",
+		Pattern = "require(5869080069):Stys()",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "KnownMalware",
+		Description = "Loads a module ID documented in the supplied historical malicious samples.",
+	},
+	{
+		Id = "SIG-BACKDOOR-004",
+		Name = "Known Stys module 6091305634",
+		Pattern = "require(6091305634):Stys()",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "KnownMalware",
+		Description = "Loads a module ID documented in the supplied historical malicious samples.",
+	},
+	{
+		Id = "SIG-BACKDOOR-005",
+		Name = "Known RoSync module 5722592696",
+		Pattern = "require(5722592696)",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "KnownMalware",
+		Description = "Loads the module ID used by the supplied obfuscated RoSync sample.",
+	},
+	{
+		Id = "SIG-PURCHASE-001",
+		Name = "Repeated random product prompt",
+		Pattern = "PromptProductPurchase(player, randomProduct)",
+		Severity = "Critical",
+		Confidence = "High",
+		Category = "PurchasePromptAbuse",
+		Description = "Matches the supplied loop that repeatedly prompts players with random product IDs.",
+	},
+	{
+		Id = "SIG-STEALER-001",
+		Name = "Synapse save-instance artifact",
+		Pattern = "UniversalSynSaveInstance",
+		Severity = "Critical",
+		Confidence = "VeryHigh",
+		Category = "AssetTheft",
+		Description = "Identifies an exploit artifact associated with saving or copying game instances.",
+	},
+	{
+		Id = "SIG-OBFUSCATION-001",
+		Name = "Known encoded preset hash",
+		Pattern = "PresetHash = \"13swcgnlo1\"",
+		Severity = "High",
+		Confidence = "High",
+		Category = "Obfuscation",
+		Description = "Matches the encoded preset marker in the supplied historical malicious samples.",
+	},
+	{
+		Id = "SIG-PERSISTENCE-001",
+		Name = "Known hellnaw activation loop",
+		Pattern = "repeat wait() until not hellnaw()",
+		Severity = "High",
+		Confidence = "High",
+		Category = "Persistence",
+		Description = "Matches a delayed activation loop from the supplied malicious samples.",
+	},
+	{
+		Id = "SIG-CONFIG-001",
+		Name = "Known TextureConfiguration loader line",
+		Pattern = "local TextureConfiguration = require(script:WaitForChild(\"TextureConfiguration\"))",
+		Severity = "High",
+		Confidence = "VeryHigh",
+		Category = "KnownMalwarePattern",
+		Description = "Matches the complete TextureConfiguration loader line supplied in the historical malicious-pattern document.",
+	},
+	{
+		Id = "SIG-CONFIG-002",
+		Name = "Known EasyConfiguration hierarchy loader line",
+		Pattern = "local EasyConfiguration = require(script:WaitForChild(\"EasyConfiguration\",5).Hierarchy.Value)",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical EasyConfiguration hierarchy loader line.",
+	},
+	{
+		Id = "SIG-CONFIG-003",
+		Name = "Known TextureConfiguration attribute loader line",
+		Pattern = "local TextureConfiguration = require(script:WaitForChild(\"TextureConfiguration\", 4):GetAttribute(\"Version\"))",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical TextureConfiguration attribute loader line.",
+	},
+	{
+		Id = "SIG-CONFIG-004",
+		Name = "Known LightSystemConfiguration pose loader line",
+		Pattern = "local LightSystemConfiguration = require(script:WaitForChild(\"Pose\", 2).Value)",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical LightSystemConfiguration pose loader line.",
+	},
+	{
+		Id = "SIG-CONFIG-005",
+		Name = "Known TextureConfiguration pose loader line",
+		Pattern = "local TextureConfiguration = require(script:WaitForChild(\"Pose\", 6).Value)",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical TextureConfiguration pose loader line.",
+	},
+	{
+		Id = "SIG-CONFIG-006",
+		Name = "Known Configuration attribute loader line",
+		Pattern = "local TextureConfiguration = require(script:WaitForChild(\"Configuration\", 4):GetAttribute(\"Version\"))",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical Configuration attribute loader line.",
+	},
+	{
+		Id = "SIG-CONFIG-007",
+		Name = "Known AutomaticModel attribute line",
+		Pattern = "local Attributes = GetChildrenAttributes({script.Parent:WaitForChild('AutomaticModel')})",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical AutomaticModel attribute collection line.",
+	},
+	{
+		Id = "SIG-CONFIG-008",
+		Name = "Known rigid constraint loader line",
+		Pattern = "local TextureConfiguration = require(script:WaitForChild(\"TextureConfiguration\").Texture.Extras.RigidConstraint.Light.Value)",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical nested rigid-constraint loader line.",
+	},
+	{
+		Id = "SIG-CONFIG-009",
+		Name = "Known EasyConfiguration pose loader line",
+		Pattern = "local EasyConfiguration = require(script:WaitForChild(\"EasyConfiguration\",5).Pose.Value)",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical EasyConfiguration pose loader line.",
+	},
+	{
+		Id = "SIG-CONFIG-010",
+		Name = "Known TextureConfiguration module loader line",
+		Pattern = "local TextureConfiguration = require(script:WaitForChild(\"TextureConfiguration\", 4).Module.Value)",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical TextureConfiguration module loader line.",
+	},
+	{
+		Id = "SIG-CONFIG-011",
+		Name = "Known pose reference loader line",
+		Pattern = "local TextureConfiguration = require(PoseReference.Value)",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical pose reference loader line.",
+	},
+	{
+		Id = "SIG-OBFUSCATION-002",
+		Name = "Formatted require keyword construction",
+		Pattern = "local keyword = (\"%s%s%s%s%s%s%s\"):format(\"r\",\"e\",\"q\",\"u\",\"i\",\"r\",\"e\")",
+		Severity = "Critical", Confidence = "VeryHigh", Category = "Obfuscation",
+		Description = "Constructs the word require from individual characters to evade simple scanning.",
+	},
+	{
+		Id = "SIG-CONFIG-012",
+		Name = "Known Create module loader line",
+		Pattern = "local Create = require(script:FindFirstChild('Create'))",
+		Severity = "High", Confidence = "VeryHigh", Category = "KnownMalwarePattern",
+		Description = "Matches a complete historical Create module loader line.",
+	},
+	{
+		Id = "SIG-BACKDOOR-006",
+		Name = "Known chained Stys module loader line",
+		Pattern = "require(5869080069):Stys() require(6091305634):Stys() require(6091305634):Stys() require(5151855975) require(5869080069):Stys()",
+		Severity = "Critical", Confidence = "VeryHigh", Category = "KnownMalware",
+		Description = "Matches the complete chained module loader line from the supplied document.",
+	},
+	{
+		Id = "SIG-LOADOUT-001",
+		Name = "Known Loadout asset retrieval 131133755138576",
+		Pattern = "Loadout.Obtain(131133755138576)",
+		Severity = "Critical", Confidence = "VeryHigh", Category = "PayloadRetrieval",
+		Description = "Matches a complete known Loadout payload retrieval line.",
+	},
+	{
+		Id = "SIG-LOADOUT-002",
+		Name = "Known Loadout asset retrieval 76290072680050",
+		Pattern = "Loadout.Obtain(76290072680050)",
+		Severity = "Critical", Confidence = "VeryHigh", Category = "PayloadRetrieval",
+		Description = "Matches a complete known Loadout payload retrieval line.",
+	},
+	{
+		Id = "SIG-PURCHASE-002",
+		Name = "Dynamic MarketplaceService action invocation",
+		Pattern = "inputService[action](inputService, game:GetService(\"Players\").LocalPlayer, id)",
+		Severity = "Critical", Confidence = "VeryHigh", Category = "PurchasePromptAbuse",
+		Description = "Dynamically invokes an action on MarketplaceService for the local player using an iterated ID.",
+	},
+	{
+		Id = "SIG-PURCHASE-003",
+		Name = "Escaped dynamic MarketplaceService action invocation",
+		Pattern = "inputService[action]\\(inputService, game:GetService(\"Players\").LocalPlayer, id)",
+		Severity = "Critical", Confidence = "VeryHigh", Category = "PurchasePromptAbuse",
+		Description = "Matches the escaped document form of a known dynamic MarketplaceService action invocation.",
+	},
+}
+
+SecurityLibrary.Keywords = {
+	{
+		Id = "KEY-DYNAMIC-001",
+		Keyword = "loadstring",
+		Severity = "High",
+		Confidence = "Medium",
+		Category = "DynamicCode",
+		Description = "Dynamic code execution requires manual review.",
+	},
+	{
+		Id = "KEY-NETWORK-001",
+		Keyword = "HttpGet",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "NetworkAccess",
+		Description = "Downloads remote content. Confirm the destination and how the response is used.",
+	},
+	{
+		Id = "KEY-NETWORK-002",
+		Keyword = "PostAsync",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "NetworkAccess",
+		Description = "Sends data to a remote service and requires endpoint review.",
+	},
+	{
+		Id = "KEY-NETWORK-003",
+		Keyword = "RequestAsync",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "NetworkAccess",
+		Description = "Performs a configurable HTTP request and requires endpoint review.",
+	},
+	{
+		Id = "KEY-ASSET-001",
+		Keyword = "LoadAsset",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "DynamicAssetLoading",
+		Description = "Loads an external asset at runtime. Verify the asset owner and contents.",
+	},
+	{
+		Id = "KEY-ENV-001",
+		Keyword = "getfenv",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "EnvironmentAccess",
+		Description = "Reads a function environment and may support hidden code behavior.",
+	},
+	{
+		Id = "KEY-ENV-002",
+		Keyword = "setfenv",
+		Severity = "High",
+		Confidence = "Medium",
+		Category = "EnvironmentTampering",
+		Description = "Changes a function environment and may alter code resolution.",
+	},
+	{
+		Id = "KEY-OBFUSCATION-001",
+		Keyword = "string.char",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "Obfuscation",
+		Description = "May construct hidden strings or source code from character values.",
+	},
+	{
+		Id = "KEY-OBFUSCATION-002",
+		Keyword = "string.reverse",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "Obfuscation",
+		Description = "May conceal identifiers, endpoints, or executable source.",
+	},
+	{
+		Id = "KEY-PURCHASE-001",
+		Keyword = "PromptProductPurchase",
+		Severity = "High",
+		Confidence = "Medium",
+		Category = "PurchasePromptAbuse",
+		Description = "Prompts a player to purchase a developer product and requires intent review.",
+	},
+	{
+		Id = "KEY-DEBUG-001",
+		Keyword = "debug.info",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "RuntimeInspection",
+		Description = "Inspects call information and may support obfuscation or environment checks.",
+	},
+	{
+		Id = "KEY-SOURCE-001",
+		Keyword = ".Source",
+		Severity = "Medium",
+		Confidence = "Low",
+		Category = "SourceAccess",
+		Description = "Reads or changes script source and requires context review.",
+	},
+}
+
+return SecurityLibrary]]></ProtectedString>
+					<string name="ScriptGuid">{786D8C24-4216-4888-8162-8B3B248818C8}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">SecurityLibrary</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXEC5AE1D67E2F43F18F8C06793786FE03">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local Validator = {}
+
+local VALID_SEVERITIES = {
+	Info = true,
+	Low = true,
+	Medium = true,
+	High = true,
+	Critical = true,
+}
+
+local VALID_CONFIDENCE = {
+	Low = true,
+	Medium = true,
+	High = true,
+	VeryHigh = true,
+}
+
+local function validateRuleId(id, knownIds, errors)
+	if type(id) ~= "string" or id == "" then
+		table.insert(errors, "Rule has an invalid ID.")
+		return
+	end
+
+	if knownIds[id] then
+		table.insert(errors, "Duplicate rule ID: " .. id)
+		return
+	end
+
+	knownIds[id] = true
+end
+
+function Validator.Validate(library)
+	local errors = {}
+
+	if type(library) ~= "table" then
+		return false, {
+			"Security library must be a table.",
+		}
+	end
+
+	if type(library.Version) ~= "string"
+		or library.Version == "" then
+		table.insert(
+			errors,
+			"Security library version is missing."
+		)
+	end
+
+	if type(library.Signatures) ~= "table" then
+		table.insert(errors, "Signatures are missing.")
+	end
+
+	if type(library.Keywords) ~= "table" then
+		table.insert(errors, "Keywords are missing.")
+	end
+
+	if #errors > 0 then
+		return false, errors
+	end
+
+	local knownIds = {}
+
+	for _, signature in ipairs(library.Signatures) do
+		validateRuleId(
+			signature.Id,
+			knownIds,
+			errors
+		)
+
+		if type(signature.Pattern) ~= "string"
+			or signature.Pattern == "" then
+			table.insert(
+				errors,
+				(signature.Id or "Unknown signature")
+					.. " has an empty pattern."
+			)
+		end
+
+		if not VALID_SEVERITIES[signature.Severity] then
+			table.insert(
+				errors,
+				(signature.Id or "Unknown signature")
+					.. " has invalid severity."
+			)
+		end
+
+		if not VALID_CONFIDENCE[signature.Confidence] then
+			table.insert(
+				errors,
+				(signature.Id or "Unknown signature")
+					.. " has invalid confidence."
+			)
+		end
+	end
+
+	for _, keyword in ipairs(library.Keywords) do
+		validateRuleId(
+			keyword.Id,
+			knownIds,
+			errors
+		)
+
+		if type(keyword.Keyword) ~= "string"
+			or keyword.Keyword == "" then
+			table.insert(
+				errors,
+				(keyword.Id or "Unknown keyword")
+					.. " has an empty keyword."
+			)
+		end
+
+		if not VALID_SEVERITIES[keyword.Severity] then
+			table.insert(
+				errors,
+				(keyword.Id or "Unknown keyword")
+					.. " has invalid severity."
+			)
+		end
+
+		if not VALID_CONFIDENCE[keyword.Confidence] then
+			table.insert(
+				errors,
+				(keyword.Id or "Unknown keyword")
+					.. " has invalid confidence."
+			)
+		end
+	end
+
+	return #errors == 0, errors
+end
+
+return Validator]]></ProtectedString>
+					<string name="ScriptGuid">{0AF2ECBD-7728-48F1-9239-CB87EE1997F9}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">SecurityLibraryValidator</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXDCAF7FC4AD934194BE2E0D5E929441A9">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local HttpService =
+	game:GetService("HttpService")
+
+local RemoteLibraryLoader = {}
+
+-- Set this to the production HTTPS endpoint when remote signatures are hosted.
+-- An empty value intentionally selects the validated local library without
+-- making a network request.
+local LIBRARY_URL = ""
+
+
+function RemoteLibraryLoader.IsConfigured()
+
+	return LIBRARY_URL:match("^https://") ~= nil
+
+end
+
+
+function RemoteLibraryLoader.Load()
+
+	if not RemoteLibraryLoader.IsConfigured() then
+
+		return false, "Remote security library URL is not configured"
+
+	end
+
+	local success, response =
+		pcall(function()
+
+			return HttpService:GetAsync(
+				LIBRARY_URL
+			)
+
+		end)
+
+
+	if not success then
+
+		return false, response
+
+	end
+
+
+	local decodeSuccess, library =
+		pcall(function()
+
+			return HttpService:JSONDecode(
+				response
+			)
+
+		end)
+
+
+	if not decodeSuccess then
+
+		return false, library
+
+	end
+
+
+	return true, library
+
+end
+
+
+return RemoteLibraryLoader]]></ProtectedString>
+					<string name="ScriptGuid">{3E486294-90C1-49D2-9659-81D1CAEF0BFE}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">RemoteLibraryLoader</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX794DC8A7C37A4B568247DBFE6DABFE98">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent
+
+local SecurityLibrary =
+	require(
+		root["SecurityLibrary"]
+	)
+
+local Validator =
+	require(
+		root["SecurityLibraryValidator"]
+	)
+
+local RemoteLibraryLoader =
+	require(
+		root["RemoteLibraryLoader"]
+	)
+
+local SecurityLibraryProvider = {}
+
+
+local function validateLibrary(library)
+
+	local valid, errors =
+		Validator.Validate(library)
+
+	if valid then
+		return true
+	end
+
+	return false, errors
+
+end
+
+
+function SecurityLibraryProvider.GetLibrary()
+
+	-- Try the remote library only when a production HTTPS URL is configured.
+
+	if RemoteLibraryLoader.IsConfigured() then
+
+		local remoteSuccess, remoteLibrary =
+			RemoteLibraryLoader.Load()
+
+		if remoteSuccess then
+
+			local valid =
+				validateLibrary(
+					remoteLibrary
+				)
+
+			if valid then
+
+				return remoteLibrary, "Remote"
+
+			end
+
+			warn(
+				"[HE-Utilties v0.3] "
+					.. "Remote security library "
+					.. "failed validation. "
+					.. "Using local fallback."
+			)
+
+		else
+
+			warn(
+				"[HE-Utilties v0.3] "
+					.. "Remote security library "
+					.. "could not be loaded. "
+					.. "Using local fallback."
+			)
+
+		end
+
+	end
+
+
+	-- Remote failed.
+	-- Validate our known-good local library.
+
+	local localValid, localErrors =
+		validateLibrary(
+			SecurityLibrary
+		)
+
+	if not localValid then
+
+		warn(
+			"[HE-Utilties v0.3] "
+				.. "Local fallback library "
+				.. "failed validation."
+		)
+
+		if localErrors then
+
+			for _, message in ipairs(
+				localErrors
+				) do
+				warn(message)
+			end
+
+		end
+
+		return nil, "Unavailable"
+
+	end
+
+
+	return SecurityLibrary, "LocalFallback"
+
+end
+
+
+return SecurityLibraryProvider]]></ProtectedString>
+					<string name="ScriptGuid">{804EA9B5-B652-45DC-8C17-7D9D2EC7C266}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">SecurityLibraryProvider</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Folder" referent="RBX4E16CEA2672B443693FC35539051D58E">
+			<Properties>
+				<Color3 name="IconTint">
+					<R>0</R>
+					<G>0</G>
+					<B>0</B>
+				</Color3>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">Actions</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBXCDA4AA0A673144DCB83398A6E9CF9216">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local Selection = game:GetService("Selection")
+local ScriptEditorService = game:GetService("ScriptEditorService")
+
+local FindingNavigator = {}
+
+function FindingNavigator.FindMatchRange(source, matchedText)
+	if type(source) ~= "string" or type(matchedText) ~= "string" or matchedText == "" then return nil end
+	-- The editor uses line/UTF-8-byte coordinates. Normalize Windows newlines.
+	source = source:gsub("\r\n", "\n")
+	matchedText = matchedText:gsub("\r\n", "\n")
+	local first, last = string.find(source, matchedText, 1, true)
+	if not first then return nil end
+	local function position(offset)
+		local prefix = source:sub(1, offset - 1)
+		local _, newlines = prefix:gsub("\n", "")
+		local previousNewline = prefix:match(".*()\n") or 0
+		return { Line = newlines + 1, Character = offset - previousNewline }
+	end
+	return { Start = position(first), End = position(last + 1) }
+end
+
+function FindingNavigator.GoToFinding(finding)
+	local instance = finding and finding.Instance
+	if finding and finding.LocationKind then
+		if typeof(instance) ~= "Instance" or not instance:IsDescendantOf(game) then
+			return false, "This object is no longer available."
+		end
+		Selection:Set({ instance })
+		return true
+	end
+	if typeof(instance) ~= "Instance" or not instance:IsA("LuaSourceContainer")
+		or not instance:IsDescendantOf(game) then
+		return false, "This script is no longer available."
+	end
+
+	local ok, opened, message = pcall(function()
+		Selection:Set({ instance })
+		local range = FindingNavigator.FindMatchRange(ScriptEditorService:GetEditorSource(instance), finding.MatchedText)
+		local success, reason = ScriptEditorService:OpenScriptDocumentAsync(instance,
+			range and { HighlightRange = range } or nil)
+		if not success then return false, reason end
+		local document = ScriptEditorService:FindScriptDocument(instance)
+		if not document then return false, "The script editor document is unavailable." end
+		-- Re-resolve after opening in case the user edited the source meanwhile.
+		range = FindingNavigator.FindMatchRange(document:GetText(), finding.MatchedText)
+		if not range then return false, "The script opened, but the matched text is no longer present." end
+		return document:ForceSetSelectionAsync(range.Start.Line, range.Start.Character,
+			range.End.Line, range.End.Character)
+	end)
+	if not ok or not opened then
+		return false, "Could not navigate to the match. " .. tostring(ok and message or opened)
+	end
+	return true
+end
+
+return FindingNavigator
+]]></ProtectedString>
+					<string name="ScriptGuid">{93518623-7786-416B-A9FB-C598641DF5F3}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">FindingNavigator</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+		</Item>
+		<Item class="Folder" referent="RBX5AF4E325092A4DA78E1C965269454561">
+			<Properties>
+				<Color3 name="IconTint">
+					<R>0</R>
+					<G>0</G>
+					<B>0</B>
+				</Color3>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<string name="Name">Tests</string>
+				<int64 name="SourceAssetId">-1</int64>
+				<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBXFDD7C92290224DDAAA00F7E03DDB4508">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+
+local SecurityLibrary =
+	require(
+		root.Security["SecurityLibrary"]
+	)
+
+local Validator =
+	require(
+		root.Security[
+		"SecurityLibraryValidator"
+		]
+	)
+
+local ProjectScanner =
+	require(
+		root.Scanner["ProjectScanner"]
+	)
+
+local TestRunner = {}
+
+function TestRunner.Run(testRoot)
+	print("==============================")
+	print("HE-Utilties v0.3 TEST")
+	print("==============================")
+
+	-- Validate security library first.
+
+	local valid, validationErrors =
+		Validator.Validate(SecurityLibrary)
+
+	if not valid then
+		warn("Security library FAILED validation.")
+
+		for _, message in ipairs(
+			validationErrors
+			) do
+			warn(message)
+		end
+
+		return false
+	end
+
+	print(
+		"Security library:",
+		SecurityLibrary.Version
+	)
+
+	print("Library validation: PASS")
+
+	-- Run scanner.
+
+	local startedAt = os.clock()
+
+	local findings =
+		ProjectScanner.Scan(
+			testRoot,
+			SecurityLibrary
+		)
+
+	local duration =
+		os.clock() - startedAt
+
+	print()
+	print("Scan complete.")
+	print("Findings:", #findings)
+
+	print(
+		"Duration:",
+		string.format(
+			"%.4f seconds",
+			duration
+		)
+	)
+
+	print()
+
+	for _, finding in ipairs(findings) do
+		print("------------------------------")
+		print("Rule:", finding.RuleId)
+		print("Type:", finding.SourceType)
+		print("Path:", finding.Path)
+		print("Severity:", finding.Severity)
+		print("Confidence:", finding.Confidence)
+		print("Matched:", finding.MatchedText)
+	end
+
+	print("==============================")
+
+	return true, findings
+end
+
+return TestRunner]]></ProtectedString>
+					<string name="ScriptGuid">{EC630050-843D-4C6F-ADB6-A38DFCC3715A}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">TestRunner</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX01B3C44BA6C54682BA969CC609260502">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+
+local SecurityLibrary =
+	require(
+		root.Security["SecurityLibrary"]
+	)
+
+local Validator =
+	require(
+		root.Security["SecurityLibraryValidator"]
+	)
+
+local TestLibraryValidation = {}
+
+function TestLibraryValidation.Run()
+
+	local valid, errors =
+		Validator.Validate(SecurityLibrary)
+
+	print("Valid:", valid)
+
+	for _, message in ipairs(errors) do
+		warn(message)
+	end
+
+	return valid
+end
+
+return TestLibraryValidation]]></ProtectedString>
+					<string name="ScriptGuid">{99933443-1EA0-47BB-B36A-EB4B5B6E72FE}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">TestLibraryValidation</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX99DA78E3880A4265A2C9BD2AC2DF7FF1">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root =
+	script.Parent.Parent
+
+local SecurityLibrary =
+	require(
+		root.Security["SecurityLibrary"]
+	)
+
+local ScriptScanner =
+	require(
+		root.Scanner["ScriptScanner"]
+	)
+
+local AutoScanService =
+	require(
+		root.Scanner["AutoScanService"]
+	)
+
+local TestAutoScan = {}
+
+function TestAutoScan.Start()
+
+	AutoScanService.SetCallbacks({
+
+		OnFindings =
+			function(instance, findings)
+
+				print(
+					"[AUTO SCAN TEST]",
+					instance:GetFullName(),
+					#findings,
+					"finding(s)"
+				)
+
+				for _, finding in ipairs(
+					findings
+					) do
+
+					print(
+						finding.RuleId,
+						finding.Severity,
+						finding.Confidence
+					)
+
+				end
+			end,
+
+		OnScanError =
+			function(instance)
+
+				warn(
+					"[AUTO SCAN TEST]",
+					"Failed:",
+					instance:GetFullName()
+				)
+
+			end,
+
+		OnQueueChanged =
+			function(queueSize)
+
+				print(
+					"[AUTO SCAN TEST]",
+					"Queue:",
+					queueSize
+				)
+
+			end,
+
+		OnLargeQueue =
+			function(queueSize)
+
+				warn(
+					"[AUTO SCAN TEST]",
+					"Large queue detected:",
+					queueSize
+				)
+
+			end,
+	})
+
+	local success, errorMessage =
+		AutoScanService.Start(
+			workspace,
+			ScriptScanner,
+			SecurityLibrary
+		)
+
+	if not success then
+		warn(
+			"Could not start Auto Scan:",
+			errorMessage
+		)
+
+		return
+	end
+
+	print(
+		"[AUTO SCAN TEST]",
+		"Ready. Edit or add a test Script."
+	)
+end
+
+function TestAutoScan.Stop()
+
+	AutoScanService.Stop()
+
+end
+
+return TestAutoScan]]></ProtectedString>
+					<string name="ScriptGuid">{C8B2B78F-40BC-47A2-8F9B-3D8EAB1AFA8A}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">TestAutoScan</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXB26F66F3BF58438A91544490FCFAC311">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+
+local RemoteLibraryLoader =
+	require(
+		root.Security["RemoteLibraryLoader"]
+	)
+
+local Validator =
+	require(
+		root.Security[
+		"SecurityLibraryValidator"
+		]
+	)
+
+local Test = {}
+
+
+function Test.Run()
+
+	print("==============================")
+	print("REMOTE LIBRARY TEST")
+	print("==============================")
+
+	-- Download remote security library.
+
+	local success, result =
+		RemoteLibraryLoader.Load()
+
+	if not success then
+
+		warn(
+			"Remote library FAILED:",
+			result
+		)
+
+		return false
+
+	end
+
+
+	-- Validate downloaded library before use.
+
+	local valid, validationErrors =
+		Validator.Validate(result)
+
+	if not valid then
+
+		warn(
+			"Remote library FAILED validation."
+		)
+
+		for _, message in ipairs(
+			validationErrors
+			) do
+			warn(message)
+		end
+
+		return false
+
+	end
+
+
+	print(
+		"Remote validation: PASS"
+	)
+
+	print(
+		"Version:",
+		result.Version
+	)
+
+	print(
+		"Signatures:",
+		#result.Signatures
+	)
+
+	print(
+		"Keywords:",
+		#result.Keywords
+	)
+
+	print("==============================")
+	print("REMOTE LIBRARY: PASS")
+	print("==============================")
+
+	return true, result
+
+end
+
+
+return Test]]></ProtectedString>
+					<string name="ScriptGuid">{8C2EB8FA-A434-4058-8527-5F5BE42A758B}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">RemoteLibraryLoaderTest</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXBCD0E010EEAC4FC09F14C95A4FDAD740">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+
+local SecurityLibraryProvider =
+	require(
+		root.Security[
+		"SecurityLibraryProvider"
+		]
+	)
+
+local Test = {}
+
+
+function Test.Run()
+
+	print("==============================")
+	print("SECURITY LIBRARY PROVIDER TEST")
+	print("==============================")
+
+	local library, source =
+		SecurityLibraryProvider.GetLibrary()
+
+
+	if not library then
+
+		warn(
+			"Security library unavailable."
+		)
+
+		return false
+
+	end
+
+
+	print(
+		"Source:",
+		source
+	)
+
+	print(
+		"Version:",
+		library.Version
+	)
+
+	print(
+		"Signatures:",
+		#library.Signatures
+	)
+
+	print(
+		"Keywords:",
+		#library.Keywords
+	)
+
+	print("==============================")
+	print("LIBRARY PROVIDER: PASS")
+	print("==============================")
+
+	return true, library, source
+
+end
+
+
+return Test]]></ProtectedString>
+					<string name="ScriptGuid">{849D3DCF-2422-428F-9697-75AB9BC4E8DB}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">SecurityLibraryProviderTest</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX2B6BDDC24EF74835A56409B6D20DEDB9">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+
+local SecurityLibraryProvider =
+	require(
+		root.Security[
+		"SecurityLibraryProvider"
+		]
+	)
+
+local ProjectScanner =
+	require(
+		root.Scanner[
+		"ProjectScanner"
+		]
+	)
+
+local Test = {}
+
+
+function Test.Run(testRoot)
+
+	print("==============================")
+	print("REMOTE SCANNER INTEGRATION TEST")
+	print("==============================")
+
+
+	-- Make sure the test root exists.
+
+	if not testRoot then
+
+		warn(
+			"Test root was not provided."
+		)
+
+		return false
+
+	end
+
+
+	-- Get the best available security library.
+
+	local library, source =
+		SecurityLibraryProvider.GetLibrary()
+
+
+	if not library then
+
+		warn(
+			"Security library unavailable."
+		)
+
+		return false
+
+	end
+
+
+	print(
+		"Library source:",
+		source
+	)
+
+	print(
+		"Library version:",
+		library.Version
+	)
+
+	print(
+		"Signatures:",
+		#library.Signatures
+	)
+
+	print(
+		"Keywords:",
+		#library.Keywords
+	)
+
+
+	-- Run the existing project scanner
+	-- using the selected library.
+
+	local startedAt =
+		os.clock()
+
+	local findings =
+		ProjectScanner.Scan(
+			testRoot,
+			library
+		)
+
+	local duration =
+		os.clock() - startedAt
+
+
+	print()
+	print("Scan complete.")
+
+	print(
+		"Findings:",
+		#findings
+	)
+
+	print(
+		"Duration:",
+		string.format(
+			"%.4f seconds",
+			duration
+		)
+	)
+
+	print()
+
+
+	-- Display findings.
+
+	for _, finding in ipairs(findings) do
+
+		print("------------------------------")
+
+		print(
+			"Rule:",
+			finding.RuleId
+		)
+
+		print(
+			"Type:",
+			finding.SourceType
+		)
+
+		print(
+			"Path:",
+			finding.Path
+		)
+
+		print(
+			"Severity:",
+			finding.Severity
+		)
+
+		print(
+			"Confidence:",
+			finding.Confidence
+		)
+
+		print(
+			"Matched:",
+			finding.MatchedText
+		)
+
+	end
+
+
+	print("==============================")
+
+
+	-- Controlled test expects exactly
+	-- four findings.
+
+	if #findings ~= 4 then
+
+		warn(
+			"INTEGRATION TEST FAILED: "
+				.. "Expected 4 findings, got "
+				.. tostring(#findings)
+		)
+
+		return false, findings
+
+	end
+
+
+	print(
+		"REMOTE SCANNER INTEGRATION: PASS"
+	)
+
+	print("==============================")
+
+
+	return true, findings, source
+
+end
+
+
+return Test]]></ProtectedString>
+					<string name="ScriptGuid">{22ED5843-85FA-4475-97B3-110E681ADF03}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">RemoteScannerIntegrationTest</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXDDAF8FA1BC17454DB5C6A46D91A55B3F">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+local Auto = require(root.Scanner.AutoScanService)
+local Reporter = require(root.Scanner.DetectionReporter)
+local Test = {}
+
+local function waitFor(predicate)
+	local deadline = os.clock() + 15
+	repeat
+		if predicate() then return end
+		task.wait(0.05)
+	until os.clock() > deadline
+	error("Timed out waiting for Auto Scan")
+end
+
+function Test.Run(expectOnline)
+	local testRoot = workspace:FindFirstChild("AssetTrustMonitor_TestRoot")
+	assert(testRoot, "Workspace.AssetTrustMonitor_TestRoot is required")
+	assert(not Auto.IsRunning(), "Stop the existing Auto Scan before testing")
+	local fixtures, scanned, reports, results = {}, {}, {}, {}
+	local success, failure = pcall(function()
+		for _, class in ipairs({ "Script", "LocalScript", "ModuleScript" }) do
+			local item = Instance.new(class)
+			item.Name = "Phase4_" .. class
+			if item:IsA("BaseScript") then item.Disabled = true end
+			item.Source = "-- clean controlled fixture"
+			item.Parent = testRoot
+			table.insert(fixtures, item)
+		end
+		Auto.SetCallbacks({
+			OnScanCompleted = function(item, findings, counts)
+				if table.find(fixtures, item) then
+					scanned[item] = (scanned[item] or 0) + 1
+					results[item] = { findings = findings, counts = counts }
+				end
+			end,
+			OnReportCompleted = function(ok, counts)
+				table.insert(reports, { ok = ok, counts = counts })
+			end,
+		})
+		assert(Auto.Start(testRoot))
+		assert(Auto.IsRunning())
+		for i = 1, 8 do
+			for _, item in ipairs(fixtures) do item.Source = "-- suspicious_marker edit " .. i end
+			task.wait(0.03)
+		end
+		assert(next(scanned) == nil, "Debounce fired too early")
+		assert(Auto.GetQueueSize() == 3, "Duplicate queue entries")
+		assert(not Auto.Queue(fixtures[1]), "Duplicate Queue accepted")
+		waitFor(function() return #reports > 0 end)
+		for _, item in ipairs(fixtures) do
+			assert(scanned[item] == 1, "Expected exactly one scan per script")
+			local result = results[item]
+			assert(#result.findings == 1 and result.findings[1].RuleId == "SIG-TEST-001", "Unexpected finding")
+			assert(result.counts["SIG-TEST-001"] == 1)
+		end
+		local total = 0
+		for _, report in ipairs(reports) do
+			assert(report.ok == expectOnline, "Unexpected reporting status")
+			total += report.counts["SIG-TEST-001"] or 0
+		end
+		assert(total == 3, "Counts were not aggregated")
+		local counts = Reporter.Aggregate({ { RuleId = "SIG-TEST-001" }, { RuleId = "SIG-TEST-001" }, { RuleId = "KEY-TEST-001" } })
+		assert(counts["SIG-TEST-001"] == 2 and counts["KEY-TEST-001"] == 1)
+		-- Cancel queued work, then prove listeners stay disconnected.
+		fixtures[1].Source = "-- suspicious_marker pending"
+		Auto.Stop()
+		assert(not Auto.IsRunning() and Auto.GetQueueSize() == 0)
+		fixtures[1].Source = "-- suspicious_marker after stop"
+		task.wait(1)
+		assert(scanned[fixtures[1]] == 1 and Auto.GetQueueSize() == 0)
+	end)
+	Auto.Stop()
+	Auto.SetCallbacks({ OnScanCompleted = false, OnReportCompleted = false })
+	for _, item in ipairs(fixtures) do item:Destroy() end
+	assert(success, failure)
+	print("PHASE 4 AUTO SCAN PASS", expectOnline and "online" or "offline")
+	return true
+end
+
+function Test.RunQueue()
+	local testRoot = workspace:FindFirstChild("AssetTrustMonitor_TestRoot")
+	assert(testRoot and not Auto.IsRunning())
+	local fixtures, times = {}, {}
+	local success, failure = pcall(function()
+		for i = 1, 1001 do
+			local item = Instance.new("ModuleScript")
+			item.Name = "Phase4_Queue_" .. i
+			item.Source = "-- clean"
+			item.Parent = testRoot
+			table.insert(fixtures, item)
+			if i % 50 == 0 then task.wait() end
+		end
+		local scanner = require(root.Scanner.ScriptScanner)
+		local library = require(root.Security.SecurityLibrary)
+		Auto.SetCallbacks({ OnScanCompleted = function() table.insert(times, os.clock()) end })
+		assert(Auto.Start(testRoot, scanner, library))
+		for i = 1, 1000 do assert(Auto.Queue(fixtures[i])) end
+		assert(not Auto.Queue(fixtures[1]), "Duplicate accepted")
+		assert(not Auto.Queue(fixtures[1001]), "Queue exceeded limit")
+		assert(Auto.IsPaused() and Auto.GetQueueSize() == 1000)
+		Auto.ClearQueue()
+		assert(Auto.Resume())
+		for i = 1, 12 do assert(Auto.Queue(fixtures[i])) end
+		waitFor(function() return #times == 12 end)
+		assert(times[6] - times[1] >= 0.025 and times[11] - times[6] >= 0.025, "Missing batch yield")
+		-- A script leaving the root must lose its listener and queued work.
+		fixtures[1].Parent = nil
+		fixtures[1].Source = "-- changed outside watched root"
+		task.wait(1)
+		assert(#times == 12 and not Auto.Queue(fixtures[1]))
+		Auto.Stop()
+		assert(Auto.Start(testRoot, scanner, library))
+		fixtures[2].Source = "-- changed after restart"
+		waitFor(function() return #times == 13 end)
+		Auto.Stop()
+		task.wait(0.1)
+		assert(Auto.GetQueueSize() == 0 and not Auto.IsRunning())
+	end)
+	Auto.Stop()
+	Auto.SetCallbacks({ OnScanCompleted = false })
+	for _, item in ipairs(fixtures) do item:Destroy() end
+	assert(success, failure)
+	print("PHASE 4 QUEUE PASS")
+	return true
+end
+
+return Test
+]]></ProtectedString>
+					<string name="ScriptGuid">{5F4EE769-3E76-4493-B8A8-57A3BC5BF051}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">AutoScanServiceTest</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXC6A8C778A7FD4ADEAB4B875E0D099179">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+local Batch = require(root.UI.NotificationBatch)
+local Controller = require(root.UI.MonitorController)
+local Widget = require(root.UI.MonitorWidget)
+local Test = {}
+
+local function waitFor(predicate, seconds)
+	local deadline = os.clock() + (seconds or 10)
+	repeat
+		if predicate() then return end
+		task.wait(0.05)
+	until os.clock() > deadline
+	error("Phase 5 test timed out")
+end
+
+local function fakeView()
+	local view = { notifications = {}, visible = false }
+	function view:Bind(actions) self.actions = actions end
+	function view:SetStatus(state) self.state = table.clone(state) end
+	function view:ShowNotification(summary) table.insert(self.notifications, summary); self.current = summary end
+	function view:HideNotification() self.current = nil end
+	function view:ShowNotice(message) self.notice = message end
+	function view:ShowFinding(entry, index, total) self.entry = entry; self.index = index; self.total = total; self.visible = true end
+	function view:HideReview() self.visible = false end
+	function view:Destroy() self.destroyed = true end
+	return view
+end
+
+local function fixture(parent, name, markers)
+	local asset = Instance.new("Model")
+	asset.Name = name
+	for index, marker in ipairs(markers) do
+		local item = Instance.new("ModuleScript")
+		item.Name = "Component" .. index
+		item.Source = "-- " .. marker
+		item.Parent = asset
+	end
+	asset.Parent = parent
+	return asset
+end
+
+function Test.Run()
+	local testRoot = workspace:FindFirstChild("AssetTrustMonitor_TestRoot")
+	assert(testRoot, "Workspace.AssetTrustMonitor_TestRoot is required")
+	local assets = {}
+	local monitor
+	local success, failure = pcall(function()
+		local view = fakeView()
+		local running, callbacks = false, {}
+		local auto = {
+			SetCallbacks = function(value) callbacks = value end,
+			Start = function() running = true; return true end,
+			Stop = function() running = false end,
+			IsRunning = function() return running end,
+			IsPaused = function() return false end,
+			GetQueueSize = function() return 0 end,
+			IsProcessing = function() return false end,
+			Queue = function() return true end,
+		}
+		local source = "Remote"
+		local navigated
+		monitor = Controller.new(view, testRoot, { AutoScan = auto,
+			Provider = { GetLibrary = function() return source ~= "Unavailable" and {} or nil, source end },
+			Navigator = { GoToFinding = function(finding) navigated = finding; return true end } })
+		monitor:Start()
+		assert(running and view.state.Enabled and not view.state.Paused and view.state.Library == "Remote")
+		local safe = fixture(testRoot, "Phase5Safe", { "clean", "clean" }); table.insert(assets, safe)
+		for _, item in ipairs(safe:GetChildren()) do callbacks.OnScanCompleted(item, {}) end
+		waitFor(function() return #view.notifications == 1 end)
+		assert(view.current.FindingCount == 0)
+		waitFor(function() return view.current == nil end, 6)
+		assert(#view.notifications == 1, "Safe asset emitted multiple notifications")
+		local pack = fixture(testRoot, "WeaponPack", { "clean", "clean" }); table.insert(assets, pack)
+		local children = pack:GetChildren()
+		local first = { Instance = children[1], Path = children[1]:GetFullName(), RuleId = "SIG-TEST-001", MatchedText = "marker", Severity = "High" }
+		local second = { Instance = children[2], Path = children[2]:GetFullName(), RuleId = "KEY-TEST-001", MatchedText = "keyword", Severity = "Medium" }
+		callbacks.OnScanCompleted(children[1], { first, first })
+		callbacks.OnScanCompleted(children[1], { first })
+		callbacks.OnScanCompleted(children[2], { second })
+		waitFor(function() return #view.notifications == 2 end)
+		assert(view.current.AssetCount == 1 and view.current.FindingCount == 2 and view.current.Severity == "High")
+		assert(view.current.Message:find("WeaponPack", 1, true))
+		view.actions.Review(); assert(view.index == 1 and view.total == 2)
+		view.actions.Previous(); assert(view.index == 1)
+		view.actions.Next(); assert(view.index == 2)
+		view.actions.Next(); assert(view.index == 2)
+		view.actions.GoTo(); assert(navigated == second)
+		view.actions.Previous(); assert(view.index == 1)
+		view.actions.Close(); assert(not view.visible and monitor.review == nil)
+		view.actions.Dismiss(); assert(view.current == nil)
+		local other = fixture(testRoot, "OtherPack", { "clean" }); table.insert(assets, other)
+		local critical = { Instance = other.Component1, RuleId = "SIG-TEST-002", MatchedText = "critical", Severity = "Critical" }
+		callbacks.OnScanCompleted(children[1], { first })
+		task.wait(0.3)
+		callbacks.OnScanCompleted(other.Component1, { critical })
+		waitFor(function() return #view.notifications == 3 end)
+		assert(view.current.AssetCount == 2 and view.current.FindingCount == 2 and view.current.CriticalCount == 1)
+		assert(view.current.Severity == "Critical" and view.current.Message:find("Multiple threats detected", 1, true))
+		view.actions.Review()
+		other:Destroy()
+		waitFor(function() return view.current and view.current.FindingCount == 1 and view.total == 1 end)
+		assert(view.current.AssetCount == 1 and monitor.review[1].Finding == first)
+		pack:Destroy()
+		waitFor(function() return view.current == nil and not view.visible end)
+		assert(monitor.review == nil, "Removed test objects remained reviewable")
+		view.actions.Toggle(); assert(not running and not view.state.Enabled)
+		source = "LocalFallback"; view.actions.Toggle()
+		assert(running and view.state.Library == "LocalFallback")
+		view.actions.Toggle(); source = "Unavailable"; view.actions.Toggle()
+		assert(not running and view.state.Library == "Unavailable" and view.state.Paused)
+	end)
+	if monitor then monitor:Destroy() end
+	for _, asset in ipairs(assets) do asset:Destroy() end
+	assert(success, failure)
+	print("PHASE 5 NOTIFICATIONS / REVIEW / STATUS PASS")
+	return true
+end
+
+function Test.RunIntegration(expectOnline)
+	local Auto = require(root.Scanner.AutoScanService)
+	assert(not Auto.IsRunning(), "Turn the installed monitor OFF before integration testing")
+	local testRoot = workspace:FindFirstChild("AssetTrustMonitor_TestRoot")
+	assert(testRoot)
+	local view = fakeView()
+	local monitor = Controller.new(view, testRoot)
+	local reports = {}
+	Auto.SetCallbacks({ OnReportCompleted = function(ok, counts)
+		table.insert(reports, { ok = ok, counts = counts })
+	end })
+	local assets = {}
+	local previousSelection = game:GetService("Selection"):Get()
+	local success, failure = pcall(function()
+		monitor:Start()
+		waitFor(function() return Auto.IsRunning() end)
+		assert(view.state.Library == (expectOnline and "Remote" or "LocalFallback"))
+		local safe = fixture(testRoot, "Phase5Safe", { "clean", "clean" }); table.insert(assets, safe)
+		waitFor(function() return #view.notifications == 1 end)
+		assert(view.current.FindingCount == 0 and view.state.LastCheck ~= "Never")
+		local pack = fixture(testRoot, "WeaponPack", { "suspicious_marker", "suspicious_keyword" }); table.insert(assets, pack)
+		waitFor(function() return #view.notifications == 2 end)
+		assert(view.current.FindingCount == 2 and view.current.AssetCount == 1)
+		view.actions.Review(); view.actions.Next(); assert(view.index == 2)
+		assert(monitor:GoTo())
+		assert(game:GetService("Selection"):Get()[1] == view.entry.Finding.Instance)
+		assert(game:GetService("ScriptEditorService"):FindScriptDocument(view.entry.Finding.Instance), "Finding script did not open in the editor")
+		view.actions.Close(); view.actions.Dismiss()
+		local a = fixture(testRoot, "ThreatPackA", { "suspicious_marker" }); table.insert(assets, a)
+		local b = fixture(testRoot, "ThreatPackB", { "backdoor_test_marker" }); table.insert(assets, b)
+		waitFor(function() return #view.notifications == 3 end)
+		assert(view.current.AssetCount == 2 and view.current.FindingCount == 2 and view.current.CriticalCount == 1)
+		-- Source changes continue to use the original imported asset identity.
+		view.actions.Dismiss()
+		a.Component1.Source = "-- suspicious_keyword changed"
+		waitFor(function() return #view.notifications == 4 end)
+		assert(view.current.FindingCount == 1 and view.current.Message:find("ThreatPackA", 1, true))
+		waitFor(function()
+			local total = 0
+			for _, report in ipairs(reports) do for _, count in pairs(report.counts) do total += count end end
+			return total == 5
+		end, 15)
+		for _, report in ipairs(reports) do assert(report.ok == expectOnline, "Unexpected detection reporting status") end
+		view.actions.Toggle(); assert(not Auto.IsRunning())
+		a.Component1.Source = "-- clean while off"
+		task.wait(1)
+		assert(#view.notifications == 4)
+	end)
+	monitor:Destroy()
+	Auto.SetCallbacks({ OnReportCompleted = false })
+	for _, asset in ipairs(assets) do asset:Destroy() end
+	game:GetService("Selection"):Set(previousSelection)
+	assert(success, failure)
+	print("PHASE 5 IMPORT / NAVIGATION / AUTO SCAN PASS", expectOnline and "online" or "offline")
+	return true
+end
+
+function Test.Open(pluginObject)
+	assert(pluginObject, "Run Open(plugin) from a Studio plugin")
+	local testRoot = workspace:FindFirstChild("AssetTrustMonitor_TestRoot")
+	assert(testRoot, "Workspace.AssetTrustMonitor_TestRoot is required")
+	local view = Widget.new(pluginObject)
+	local monitor = Controller.new(view, testRoot)
+	monitor:Start()
+	return monitor
+end
+
+return Test
+]]></ProtectedString>
+					<string name="ScriptGuid">{1D4DEFFF-EC31-450E-B57F-3B4D610CEFB9}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">MonitorUITest</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBX21C040F85A3C44D398C35152867A25B5">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local Navigator = require(script.Parent.Parent.Actions.FindingNavigator)
+local Test = {}
+
+function Test.Run()
+	local function check(source, match, sl, sc, el, ec)
+		local range = Navigator.FindMatchRange(source, match)
+		assert(range and range.Start.Line == sl and range.Start.Character == sc)
+		assert(range.End.Line == el and range.End.Character == ec)
+	end
+	check("-- clean\n-- suspicious_marker", "suspicious_marker", 2, 4, 2, 21)
+	check("-- clean\r\n-- suspicious_marker", "suspicious_marker", 2, 4, 2, 21)
+	check("é marker", "marker", 1, 4, 1, 10)
+	check("x\nabc\ndef\ny", "abc\ndef", 2, 1, 3, 4)
+	check("marker marker", "marker", 1, 1, 1, 7)
+	check("a.b", "a.b", 1, 1, 1, 4)
+	assert(Navigator.FindMatchRange("clean", "missing") == nil)
+	assert(Navigator.FindMatchRange("clean", "") == nil)
+	print("FINDING NAVIGATOR RANGE PASS")
+	return true
+end
+
+function Test.RunEditor()
+	local testRoot = workspace:FindFirstChild("AssetTrustMonitor_TestRoot")
+	assert(testRoot)
+	local item = Instance.new("ModuleScript")
+	item.Name = "NavigationFixture"
+	item.Source = "-- clean\n-- suspicious_marker\nreturn {}"
+	item.Parent = testRoot
+	local previous = game:GetService("Selection"):Get()
+	local ok, failure = pcall(function()
+		assert(Navigator.GoToFinding({ Instance = item, MatchedText = "suspicious_marker" }))
+		local document = game:GetService("ScriptEditorService"):FindScriptDocument(item)
+		assert(document and document:GetSelectedText() == "suspicious_marker")
+		local line, column = document:GetSelectionStart()
+		assert(line == 2 and column == 4)
+	end)
+	item:Destroy()
+	game:GetService("Selection"):Set(previous)
+	assert(ok, failure)
+	print("FINDING NAVIGATOR EDITOR PASS")
+	return true
+end
+
+return Test
+]]></ProtectedString>
+					<string name="ScriptGuid">{0D9A8DA3-788C-4F9C-B200-AEF9A7B5F13D}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">FindingNavigatorTest</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+			<Item class="ModuleScript" referent="RBXB81CE0A0D5D54397B9444942396AFD08">
+				<Properties>
+					<Content name="LinkedSource"><null></null></Content>
+					<ProtectedString name="Source"><![CDATA[local root = script.Parent.Parent
+local Scanner = require(root.Scanner.ObjectScanner)
+local Library = require(root.Security.SecurityLibrary)
+local Auto = require(root.Scanner.AutoScanService)
+local Batch = require(root.UI.NotificationBatch)
+local Navigator = require(root.Actions.FindingNavigator)
+local Tags = game:GetService("CollectionService")
+local Test = {}
+
+local function waitFor(predicate)
+	local deadline = os.clock() + 10
+	repeat if predicate() then return end; task.wait(0.05) until os.clock() > deadline
+	error("Object scanner test timed out")
+end
+
+function Test.Run()
+	local testRoot = workspace:FindFirstChild("AssetTrustMonitor_TestRoot")
+	assert(testRoot and not Auto.IsRunning(), "Stop the monitor before testing")
+	local fixture = Instance.new("Folder")
+	fixture.Name = "MetadataTest"
+	fixture.Parent = testRoot
+	local selection = game:GetService("Selection"):Get()
+	local ok, failure = pcall(function()
+		for _, class in ipairs({ "TextLabel", "TextButton", "TextBox" }) do
+			local item = Instance.new(class)
+			item.Text = "suspicious_marker"
+			item:SetAttribute("Config", "suspicious_keyword")
+			Tags:AddTag(item, "backdoor_test_marker")
+			item.Parent = fixture
+			local findings = Scanner.ScanInstance(item, Library)
+			assert(#findings == 3, "Expected UI text, attribute and tag findings")
+			assert(findings[1].LocationKind == "UI Text" and findings[2].LocationKind == "Attribute"
+				and findings[3].LocationKind == "Tag")
+			assert(Navigator.GoToFinding(findings[2]))
+			assert(game:GetService("Selection"):Get()[1] == item)
+		end
+		local item = Instance.new("ModuleScript")
+		item.Source = "-- suspicious_marker"
+		item:SetAttribute("First", "suspicious_marker")
+		item:SetAttribute("Second", "suspicious_marker")
+		item.Parent = fixture
+		local findings = Scanner.ScanInstance(item, Library)
+		assert(#findings == 3 and not findings[1].LocationKind, "Script scanning changed")
+		local batch = Batch.new()
+		batch:Add(fixture, item, findings); batch:Add(fixture, item, findings)
+		assert(batch:Summary().FindingCount == 3, "Distinct fields lost or duplicate findings accepted")
+		local clean = Instance.new("Part")
+		clean:SetAttribute("suspicious_marker", "benign")
+		Tags:AddTag(clean, "benign")
+		clean.Parent = fixture
+		assert(#Scanner.ScanInstance(clean, Library) == 0, "Ordinary metadata was flagged")
+	end)
+	fixture:Destroy()
+	game:GetService("Selection"):Set(selection)
+	assert(ok, failure)
+	print("OBJECT SCANNER MATCHING / NAVIGATION PASS")
+	return true
+end
+
+function Test.RunAuto()
+	local testRoot = workspace:FindFirstChild("AssetTrustMonitor_TestRoot")
+	assert(testRoot and not Auto.IsRunning(), "Stop the monitor before testing")
+	local fixture = Instance.new("Folder")
+	fixture.Name = "MetadataAutoTest"
+	fixture.Parent = testRoot
+	local label = Instance.new("TextLabel")
+	label.Text = "clean"; label.Parent = fixture
+	local part = Instance.new("Part"); part.Parent = fixture
+	local results, scans = {}, {}
+	local ok, failure = pcall(function()
+		Auto.SetCallbacks({ OnScanCompleted = function(item, findings)
+			results[item] = findings; scans[item] = (scans[item] or 0) + 1
+		end })
+		assert(Auto.Start(testRoot, Scanner, Library))
+		for i = 1, 8 do label.Text = "suspicious_marker " .. i; task.wait(0.03) end
+		waitFor(function() return results[label] ~= nil end)
+		assert(scans[label] == 1 and #results[label] == 1, "Text debounce failed")
+		part:SetAttribute("Config", "suspicious_keyword")
+		waitFor(function() return results[part] ~= nil end)
+		assert(#results[part] == 1 and results[part][1].LocationKind == "Attribute")
+		local before = scans[part]
+		Tags:AddTag(part, "backdoor_test_marker")
+		waitFor(function() return scans[part] > before end)
+		assert(#results[part] == 2, "First use of a tag was missed")
+		local inserted = Instance.new("TextButton")
+		inserted.Text = "suspicious_marker"
+		Tags:AddTag(inserted, "backdoor_test_marker")
+		inserted.Parent = fixture
+		waitFor(function() return results[inserted] ~= nil end)
+		assert(#results[inserted] == 2, "Imported text/tag not scanned")
+		before = scans[part]
+		Tags:RemoveTag(part, "backdoor_test_marker")
+		part:SetAttribute("Config", nil)
+		waitFor(function() return scans[part] > before end)
+		assert(#results[part] == 0)
+		Auto.Stop()
+		before = scans[part]
+		part:SetAttribute("Config", "suspicious_keyword")
+		Tags:AddTag(part, "backdoor_test_marker")
+		task.wait(1)
+		assert(scans[part] == before and Auto.GetQueueSize() == 0, "Listeners survived Stop")
+	end)
+	Auto.Stop(); Auto.SetCallbacks({ OnScanCompleted = false })
+	fixture:Destroy()
+	assert(ok, failure)
+	print("OBJECT AUTO SCAN TEXT / ATTRIBUTES / TAGS PASS")
+	return true
+end
+
+return Test
+]]></ProtectedString>
+					<string name="ScriptGuid">{606A7D82-19B8-47B2-B70D-A2A83CD5EE6B}</string>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<string name="Name">ObjectScannerTest</string>
+					<int64 name="SourceAssetId">-1</int64>
+					<SharedString name="Tags">yuZpQdnvvUBOTYh1jqZ2cA==</SharedString>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+	<SharedStrings>
+		<SharedString md5="yuZpQdnvvUBOTYh1jqZ2cA=="></SharedString>
+	</SharedStrings>
+</roblox>
